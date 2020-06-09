@@ -43,11 +43,9 @@ def reply(message):
 
 # regular expression
 def match_pattern(message):
-    print(message)
     pattern = re.compile(r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?')
     matches = pattern.finditer(message)
     for match in matches:
-        print(match.group(6))
         return match.group(6)
 
 
@@ -59,7 +57,6 @@ def get_qid(name, query):
     sparql.setQuery(fullquery)
     sparql.setReturnFormat(JSON)
     searchresults = sparql.query().convert()
-    print("qid zwischenergebnis: " + searchresults["results"]["bindings"][0]["item"]["value"].replace("http://www.wikidata.org/entity/", ""))
     return searchresults["results"]["bindings"][0]["item"]["value"].replace("http://www.wikidata.org/entity/", "")
 
 
@@ -82,7 +79,6 @@ def get_results(query):
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    print(sparql.query().convert())
     return sparql.query().convert()
 
 
