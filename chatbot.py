@@ -34,9 +34,7 @@ dispatcher.add_handler(echohandler)
 # general operators
 def reply(message):
     regextract = match_pattern(message)
-    print("1. Ergebnis regex: %s" % regextract)
     personqid = get_person(regextract)
-    print("2. Ergebnis qid: %s" % personqid)
     children = []
     for c in get_names_children(personqid)["results"]["bindings"]:
         children.append(c["childLabel"]["value"])
