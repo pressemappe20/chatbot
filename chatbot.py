@@ -7,6 +7,8 @@ from telegram.ext import (Updater,
                           MessageHandler,
                           Filters)
 import logging
+from SPARQLWrapper import SPARQLWrapper, JSON
+import re
 
 # Telegram api
 updater = Updater(token="1157696049:AAG_ih1xmSQGEckJkAVpHZrGLxbjR9hxOHM", use_context=True)
@@ -38,8 +40,7 @@ def reply(message):
     children = []
     for c in get_names_children(personqid)["results"]["bindings"]:
         children.append(c["childLabel"]["value"])
-    for child in children:
-        print(child)
+    return ", ".join(children)
 
 
 # regular expression
@@ -54,7 +55,7 @@ def match_pattern(message):
 
 # qid
 def get_qid(name, query):
-    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+    user_agent = "WDQS-example Python/3.7")
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
     fullquery = query % name
     sparql.setQuery(fullquery)
@@ -78,7 +79,7 @@ def get_person(name):
 
 # sparql
 def get_results(query):
-    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+    user_agent = "WDQS-example Python/3.7")
     # TODO adjust user agent; see https://w.wiki/CX6
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
     sparql.setQuery(query)
