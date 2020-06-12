@@ -61,12 +61,12 @@ def get_qid(name, query):
 
 
 def get_person(name):
-    query = """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{  
-    ?item ?label "%s"@de.  
+    query = """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
+    ?item ?label "%s"@de.
     ?item wdt:P31 wd:Q5 .
     ?article schema:about ?item .
     ?article schema:inLanguage "en" .
-    ?article schema:isPartOf <https://en.wikipedia.org/>.	
+    ?article schema:isPartOf <https://en.wikipedia.org/>.
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     }"""
     return get_qid(name, query)
@@ -74,7 +74,7 @@ def get_person(name):
 
 # sparql
 def get_results(query):
-    user_agent = "WDQS-example Python/3.7")
+    user_agent = "WDQS-example Python/3.7"
     # TODO adjust user agent; see https://w.wiki/CX6
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
     sparql.setQuery(query)
@@ -89,8 +89,6 @@ WHERE
   wd:{person} wdt:P40 ?child .
 SERVICE wikibase:label {{bd:serviceParam wikibase:language "en" }}
 }}
-
-
 """.format(person=person)
     return get_results(query)
 
