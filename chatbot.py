@@ -51,7 +51,7 @@ def match_pattern(message):
 
 # qid
 def get_qid(name, query):
-    user_agent = "WDQS-example Python/3.7")
+    user_agent = "WDQS-example Python/3.7"
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
     fullquery = query % name
     sparql.setQuery(fullquery)
@@ -83,7 +83,7 @@ def get_results(query):
 
 
 def get_names_children(person):
-    query = """SELECT ?child ?childLabel 
+    query = """SELECT ?child ?childLabel
 WHERE
 {{
   wd:{person} wdt:P40 ?child .
