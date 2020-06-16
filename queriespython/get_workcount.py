@@ -22,7 +22,7 @@ def get_workcount(endpoint_url, count):
 PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
 #
 select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
-where {
+where {{
   # get the basic set of persons with "field of activity"
   # "Staatsoberhaupt" from PM20 endpoint
   service <http://zbw.eu/beta/sparql/pm20/query> {{
