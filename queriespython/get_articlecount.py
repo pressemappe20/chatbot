@@ -1,7 +1,6 @@
 # pip install sparqlwrapper
 # https://rdflib.github.io/sparqlwrapper/
 
-import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 endpoint_url = "https://query.wikidata.org/sparql"
