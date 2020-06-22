@@ -23,7 +23,7 @@ def reply(message):
 
 # regular expression
 def match_pattern(message):
-    pattern = re.compile(r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s((\w+)\s?(\w+))')
+    pattern = re.compile(r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s((\w+)\s?(\w+)?)')
     matches = pattern.finditer(message)
     for match in matches:
         return match.group(6)
