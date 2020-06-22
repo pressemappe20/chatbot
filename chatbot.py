@@ -23,7 +23,7 @@ def reply(message):
 
 # regular expression
 def match_pattern(message):
-    pattern = re.compile(r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?')
+    pattern = re.compile(r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s((\w+)\s?(\w+))')
     matches = pattern.finditer(message)
     for match in matches:
         return match.group(6)
@@ -79,7 +79,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="What's up, nerds?")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hallo! Ich bin der Testbot der Gruppe Chatbot aus dem Projekt Pressemappe 20. Jahrhundert! Leider kann ich aktuell nur sagen, wie die Kinder von berühmten Persönlichkeiten heißen, doch ich lasse hart an mir arbeiten. Viel Spaß!")
 
 
 starthandler = CommandHandler("start", start)
