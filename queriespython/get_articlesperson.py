@@ -34,7 +34,7 @@ where {{
   # viewer link
   bind(substr(?pm20Id, 4, 4) as ?numStub)
   bind(substr(?pm20Id, 4, 6) as ?num)
-  bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+  bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
   # add labels
   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
 }}
