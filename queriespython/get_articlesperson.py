@@ -6,7 +6,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 endpoint_url = "https://query.wikidata.org/sparql"
 
 def get_results(endpoint_url, query):
-    user_agent = "WDQS-example Python/3.7" % (sys.version_info[0], sys.version_info[1])
+    user_agent = "WDQS-example Python/3.7"
     # TODO adjust user agent; see https://w.wiki/CX6
     sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
     sparql.setQuery(query)
@@ -34,7 +34,7 @@ where {{
   # viewer link
   bind(substr(?pm20Id, 4, 4) as ?numStub)
   bind(substr(?pm20Id, 4, 6) as ?num)
-  bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+  bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
   # add labels
   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
 }}
