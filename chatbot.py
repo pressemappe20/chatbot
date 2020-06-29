@@ -1,5 +1,7 @@
 """Dieses Programm empfängt und sendet Informationen aus dem Telegram-chat des bots "prmatestbot". Der code kann für den
-fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen bot angepasst werden."""
+fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen bot angepasst werden.
+
+Aktuelle Funktionen: kinder_namen, artikel_zu"""
 
 
 from telegram.ext import (Updater,
