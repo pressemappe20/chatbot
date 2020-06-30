@@ -134,7 +134,7 @@ def get_results(qid, query):
 
 
 # Telegram
-updater = Updater(token="1157696049:AAG_ih1xmSQGEckJkAVpHZrGLxbjR9hxOHM", use_context=True)
+updater = Updater(token="1311256473:AAGF0N6tjRCO5zIdDwMPOMaE1LfPK3aWies", use_context=True)
 dispatcher = updater.dispatcher
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
