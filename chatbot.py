@@ -140,7 +140,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="What's up, nerds?")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hallo! Ich bin der Testbot der Gruppe Chatbot aus dem Projekt Pressemappe 20. Jahrhundert! Leider kann ich aktuell nur sagen, wie die Kinder von berühmten Persönlichkeiten heißen und dir Artikel zu Staatsoberhäuptern geben, doch ich lasse hart an mir arbeiten. Viel Spaß!")
 
 
 starthandler = CommandHandler("start", start)
