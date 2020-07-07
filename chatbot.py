@@ -20,7 +20,7 @@ def access_kinder_namen(dict):
 
 
 def access_artikel_zu(dict):
-    return dict["viewer"]["value"]#.replace("pm20mets/", "pm20mets/pe/")
+    return dict["viewer"]["value"]
 
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
