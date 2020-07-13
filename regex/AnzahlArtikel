@@ -1,0 +1,14 @@
+import re
+
+text_to_search_1 ='''
+Wie viele Artikel gibt es in der PM20 über Josef Stalin?
+Wie viele Artikel hat die Pressemappe zu Stalin?
+'''
+
+pattern = re.compile(r'(Wie\sviele)\s(Artikel)\s(\w+\s\w+\s?\w+?\s?\w+?)\s(PM20|Pressemappe)\s(\w+)\s(\w+)')
+
+matches = pattern.finditer(text_to_search_1)
+
+
+for match in matches:
+    print(match.group(1), match.group(2), match.group(3), match.group(4), match.group(5), match.group(6))
