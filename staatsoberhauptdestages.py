@@ -59,11 +59,11 @@ def daily_staatsoberhaupt():
     return name
 
 #returned namen des orts und nichts anderes......
-def daily_place():
+def daily_birthplace():
    place = resultjson['results']['bindings'][0]['birthplaceLabel']['value']
    return place
 
 print("Staatsoberhaupt des Tages:", daily_staatsoberhaupt())
-print ("Geburtsort:", daily_place())
+print ("Geburtsort:", daily_birthplace())
 
 
