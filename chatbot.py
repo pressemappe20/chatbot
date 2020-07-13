@@ -139,12 +139,90 @@ dispatcher = updater.dispatcher
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
+# Erstellen der buttons für die Links
+button = [[InlineKeyboardButton(text="Pressemappe 20. Jahrhundert",
+                                url="http://webopac0.hwwa.de/PresseMappe20/index.cfm")],
+          [InlineKeyboardButton(text="Wikipedia-Artikel zur Pressemappe",
+                                url="https://de.wikipedia.org/wiki/Pressearchiv_20._Jahrhundert")]]
+show_button = InlineKeyboardMarkup(inline_keyboard=button)
+
+# emojis
+lupe = u"\U0001F50D"
+crown = u"\U0001F451"
+waving = u"\U0001F44B"
+
+# /start Command
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hallo! Ich bin der Testbot der Gruppe Chatbot aus dem Projekt Pressemappe 20. Jahrhundert! Leider kann ich aktuell nur sagen, wie die Kinder von berühmten Persönlichkeiten heißen und dir Artikel zu Staatsoberhäuptern geben, doch ich lasse hart an mir arbeiten. Viel Spaß!")
+   context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Hi! " + waving +
+                                 "\nDieser Chatbot wurde erstellt, um Informationen aus der <b>Pressemappe 20. Jahrhundert</b> auszugeben.\n"
+                                 "Dieser Chatbot wurde im Rahmen des Projektes “Pressemappe des 20. Jahrhunderts” an der Hochschule der Medien erarbeitet.\n\n"
+                                 "Der Bot gibt momentan verschiedene Informationen zu <b>Staatsoberhäuptern</b> aus. Er greift dazu auf die Personendateien in der Pressemappe zu.\n\n"
+                                 "Das sind die Commands des Bots:\n\n"
+                                 "<b>/info</b>: Wenn du mehr zur Pressemappe erfahren willst, schau hier nach.\n"
+                                 "<b>/help</b>: Wenn du Hilfe brauchst, schau bei diesem Command nach. Dort werden die Funktionen des Bots etwas genauer erklärt.\n"
+                                 "<b>/dailyspecial</b>: Hier findest du Infos zur Funktion <i>Staatsoberhaupt des Tages</i>\n\n"
+                                 "Ansonsten wünschen wir viel Spaß beim Erforschen! " + lupe,
+                            parse_mode="HTML")
 
 
+# /help Command
+def help(update, context):
+   context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Dieser Chatbot gibt dir Informationen zur <b>Pressemappe des 20. Jahrhunderts</b> (PM20) aus.\n\n"
+                                 "Du kannst einfach anfangen, dem Bot Fragen zu stellen, zum Beispiel: <i>Wieviele Kinder hat Joseph Stalin?</i>\n\n"
+                                 "Der Chatbot kann momentan etwa 10 verschiedene Fragen und Aufforderungen beantworten:\n\n"
+                                 "- Wie heißen die Kinder von <i>{Person}</i>?\n"
+                                 "- Wieviele Kinder hat <i>{Person}</i>?\n"
+                                 "- Gib mir Artikel über <i>{Person}</i> in PM20\n"
+                                 "- Wieviele Artikel gibt es in der PM20 über <i>{Person}</i>?\n"
+                                 "- Gib mir ein Bild von <i>{Person}</i>\n"
+                                 "- Gib mir Allgemeine Informationen zu <i>{Person}</i>\n"
+                                 "- Gib mir weibliche Staatsoberhäupter eines <i>{Landes}</i>\n"
+                                 "- Nenn mir Artikel zu Staatsoberhäuptern von <i>{Land}</i>.\n"
+                                 "- Mehr als <i>{Anzahl}</i> Artikel in der Pressemappe\n"
+                                 "- Wie lange hat <i>{Person}</i> regiert?\n\n"
+                                 "Der Bot beschränkt sich bisher auf das Thema <b>Staatsoberhäupter</b>.\n\n"
+                                 "Leg los und probiere einfach einige der Fragen aus!",
+                            parse_mode="HTML")
+
+
+# /info Command
+def info(update, context):
+   context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Informationen zur <b>Pressemappe</b>: \n\n"
+                                 "Die Pressemappe umfasst rund 19 Millionen Presseausschnitte, Dokumenten und Bilder zu Verschiedenen sachlichen Themen, Personen und Objekten. "
+                                 "Die verschiedenen Bestandteile des Pressearchivs wurden teilweise digitalisiert und insbesondere die Personenmappen sind fast vollständig online abrufbar.\n\n"
+                                 "Im Oktober 2019 wurden in einem ersten Schritt die Metadaten zu etwa 5000 Personendossiers der Pressemappe an Wikidata weitergegeben und dort aufgenommen.\n\n"
+                                 "Der Chatbot greift auf das Thema <b>Staatsoberhäupter</b> zurück, das momentan 218 Datensätze umfasst.\n\n"
+                                 "Mehr zur ausführlichen Geschichte und detailierten Infos findest du auf der Startseite der <b>Pressemappe</b> und auf dem <b>Wikipedia-Artikel</b>"
+                                 "zur Pressemappe.",
+                            parse_mode="HTML",
+                            reply_markup=show_button)
+
+
+# /dailyspecial Command
+def dailyspecial(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Wir haben die Funktion “Staatsoberhaupt des Tages” für dich erstellt!\n\n"
+                                  "Damit bekommst du jeden Tag grundlegende Informationen zu einem beliebig gewählten Staatsoberhaupt aus der Pressemappe. "
+                                  "So bekommst du jeden Tag deine Dosis an Informationen zu verschiedenen Königen, Königinnen "
+                                  "und anderen Staatsoberhäuptern! " + crown,
+                             parse_mode="HTML")
+    
+
+# add all Commands with dispatcher
 starthandler = CommandHandler("start", start)
 dispatcher.add_handler(starthandler)
+
+helphandler = CommandHandler("help", help)
+dispatcher.add_handler(helphandler)
+
+infohandler = CommandHandler("info", info)
+dispatcher.add_handler(infohandler)
+
+dailyspecialhandler = CommandHandler("dailyspecial", dailyspecial)
+dispatcher.add_handler(dailyspecialhandler)
 
 
 def echo(update, context):
