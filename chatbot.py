@@ -3,8 +3,7 @@ fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen
 
 Aktuelle Funktionen: kinder_namen, artikel_zu"""
 
-from telegram import (InlineKeyboardButton,
-                      InlineKeyboardMarkup)
+
 from telegram.ext import (Updater,
                           CommandHandler,
                           MessageHandler,
@@ -19,9 +18,29 @@ from SPARQLWrapper import (SPARQLWrapper,
 def access_kinder_namen(dict):
     return dict["childLabel"]["value"]
 
-
 def access_artikel_zu(dict):
-    return dict["viewer"]["value"]
+    return dict["viewer"]["value"].replace("pm20mets/", "pm20mets/pe/")
+
+def access_artikelzahl(dict):
+    return dict["workCount"]["value"]
+
+# Darstellung der Ergebnisse
+def display_kinder_namen(resultlist, name):
+    if len(resultlist) == 0:
+        return "Ich konnte keine Kinder von %s finden. 😢" % name
+    elif len(resultlist) == 1:
+        return "Die Suche war erfolgreich! %s ist ein Kind von %s!" % (resultlist[0], name)
+    else:
+        return ("Die Suche war erfolgreich! Hier ist eine Liste der Kinder von %s:\n" % name) + "\n".join(resultlist)
+
+def display_artikel_zu(resultlist, name):
+    if len(resultlist) == 0:
+        return "Ich konnte keine Artikel zu %s finden. 😢" % name
+    else:
+        return "Die Suche war erfolgreich! Hier findest du Artikel zu %s:\n%s" % (name, resultlist[0])
+    
+def display_artikelzahl(resultlist, name):
+    return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
 
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
@@ -42,10 +61,8 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                  wd:{person} wdt:P40 ?child .
                                  SERVICE wikibase:label {{bd:serviceParam wikibase:language "en" }}
                                  }}""",
-                            # in Besprechung klären! Diese Zeile ersetzt den Pfad im dictionary der query-Ergebnisse!
                             "access": access_kinder_namen,
-                            "layout": None},
-
+                            "display":display_kinder_namen},
            "artikel_zu": {"regex": r'(\w+\s?\w+?)\s(Artikel)\s(\w+)\s((\w+)\s?(\w+))',
                           "position": 4,
                           "find_qid": qid_suchen["person"],
@@ -66,12 +83,39 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                            # viewer link
                            bind(substr(?pm20Id, 4, 4) as ?numStub)
                            bind(substr(?pm20Id, 4, 6) as ?num)
-                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
                            # add labels
                            service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
                            }}
                            """,
-                          "access": access_artikel_zu}
+                          "access": access_artikel_zu,
+                          "display": display_artikel_zu},
+           "anzahl_artikel": {"regex": r'(Wie\sviele)\s(Artikel)\s(\w+\s\w+\s?\w+?\s?\w+?)\s(PM20|Pressemappe)\s(\w+)\s(\w+\s?\w+?)',
+                               "position": 6,
+                               "find_qid": qid_suchen["person"],
+                               "query": """PREFIX schema: <http://schema.org/>
+                               PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                               select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                               where {{
+                               # get the basic set of persons with "field of activity"
+                               # "Staatsoberhaupt" from PM20 endpoint
+                               service <http://zbw.eu/beta/sparql/pm20/query> {{
+                               ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                               bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                               }}
+                               wd:{person} wdt:P4293 ?pm20Id .
+                               restrict to items with online accessible articles
+                               wd:{person} p:P4293/pq:P5592 ?workCount .
+                               filter(?workCount > 0)
+                               # viewer link
+                               bind(substr(?pm20Id, 4, 4) as ?numStub)
+                               bind(substr(?pm20Id, 4, 6) as ?num)
+                               bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                               # add labels
+                               service wikibase:label {{bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                               }}""",
+                               "access": access_artikelzahl,
+                               "layout": display_artikelzahl}
            }
 
 
@@ -80,17 +124,16 @@ def reply(message):
     replydict = match_pattern(message)
     replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     resultlist = []
-    access = "viewer" # replydict["access"]
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
         resultlist.append(replydict["access"](r))
-    return ", ".join(resultlist)
+    return replydict["display"](resultlist, replydict["result"])
 
 # hier wird ein dictionary aus actions ausgegeben, welches um den key "result" ergänzt wird
 # regular expression
 def match_pattern(message):
     pattern_found = False
     for a in actions.keys():
-        if re.compile(actions[a]["regex"]).match(message) is not None:
+        if re.compile(str(actions[a]["regex"])).match(message) is not None:
             pattern_found = True
             key = a
             pattern = re.compile(actions[a]["regex"])
@@ -133,7 +176,7 @@ def get_results(qid, query):
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-
+  
 # Telegram
 updater = Updater(token="1311256473:AAGF0N6tjRCO5zIdDwMPOMaE1LfPK3aWies", use_context=True)
 dispatcher = updater.dispatcher
