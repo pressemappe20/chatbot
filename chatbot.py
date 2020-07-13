@@ -197,7 +197,7 @@ def info(update, context):
                                  "Im Oktober 2019 wurden in einem ersten Schritt die Metadaten zu etwa 5000 Personendossiers der Pressemappe an Wikidata weitergegeben und dort aufgenommen.\n\n"
                                  "Der Chatbot greift auf das Thema <b>Staatsoberhäupter</b> zurück, das momentan 218 Datensätze umfasst.\n\n"
                                  "Mehr zur ausführlichen Geschichte und detailierten Infos findest du auf der Startseite der <b>Pressemappe</b> und auf dem <b>Wikipedia-Artikel</b>"
-                                 "zur Pressemappe.",
+                                 " zur Pressemappe.",
                             parse_mode="HTML",
                             reply_markup=show_button)
 
