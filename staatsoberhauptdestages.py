@@ -58,12 +58,55 @@ def daily_staatsoberhaupt():
     name = resultjson['results']['bindings'][0]['itemLabel']['value']
     return name
 
+def daily_birthdate():
+    birthdate = resultjson['results']['bindings'][0]['birthdate']['value']
+    return birthdate
+
 #returned namen des orts und nichts anderes......
 def daily_birthplace():
-   place = resultjson['results']['bindings'][0]['birthplaceLabel']['value']
-   return place
+   birthplace = resultjson['results']['bindings'][0]['birthplaceLabel']['value']
+   if birthplace.startswith('Q') == True:
+       return None
+   else:
+       return birthplace
+
+def daily_deathdate():
+    deathdate = resultjson['results']['bindings'][0]['deathdate']['value']
+    return deathdate
+
+def daily_deathplace():
+    deathplace = resultjson['results']['bindings'][0]['deathplaceLabel']['value']
+    if deathplace.startswith('Q') == True:
+       return None
+    else:
+       return deathplace
+
+def daily_mother():
+    mother = resultjson['results']['bindings'][0]['motherLabel']['value']
+    if mother.startswith('Q') == True:
+        return None
+    else:
+        return mother
+
+def daily_father():
+    father = resultjson['results']['bindings'][0]['fatherLabel']['value']
+    if father.startswith('Q') == True:
+        return None
+    else:
+        return father
+
+def daily_spouse():
+    spouse = resultjson['results']['bindings'][0]['spouseLabel']['value']
+    if spouse.startswith('Q') == True:
+        return None
+    else:
+        return spouse
 
 print("Staatsoberhaupt des Tages:", daily_staatsoberhaupt())
-print ("Geburtsort:", daily_birthplace())
-
-
+print("Geburtsdatum: ", daily_birthdate())
+print("Geburtsort:", daily_birthplace())
+print("Sterbedatum:", daily_deathdate())
+print("Sterbeort: ",daily_deathplace())
+print("Mutter: ", daily_mother())
+print("Vater: ", daily_father())
+print("Ehepartner: ", daily_spouse())
