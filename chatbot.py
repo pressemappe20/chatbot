@@ -105,7 +105,6 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
                                }}
                                wd:{person} wdt:P4293 ?pm20Id .
-                               restrict to items with online accessible articles
                                wd:{person} p:P4293/pq:P5592 ?workCount .
                                filter(?workCount > 0)
                                # viewer link
