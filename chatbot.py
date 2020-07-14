@@ -3,6 +3,7 @@ fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen
 
 Aktuelle Funktionen: kinder_namen, artikel_zu"""
 
+
 from telegram import (InlineKeyboardButton,
                       InlineKeyboardMarkup)
 from telegram.ext import (Updater,
@@ -25,6 +26,16 @@ def access_artikel_zu(dict):
 def access_artikelzahl(dict):
     return dict["workCount"]["value"]
 
+def access_generalinformation(dict):
+    return {"birthplaceLabel": dict["birthplaceLabel"]["value"],
+            "deathplaceLabel": dict["deathplaceLabel"]["value"],
+            "birthdate": dict["birthdate"]["value"],
+            "deathdate": dict["deathdate"]["value"],
+            "deathcauseLabel": dict["deathcauseLabel"]["value"],
+            "motherLabel": dict["motherLabel"]["value"],
+            "fatherLabel": dict["fatherLabel"]["value"],
+            "spouseLabel": dict["spouseLabel"]["value"]}
+
 # Darstellung der Ergebnisse
 def display_kinder_namen(resultlist, name):
     if len(resultlist) == 0:
@@ -39,10 +50,30 @@ def display_artikel_zu(resultlist, name):
         return "Ich konnte keine Artikel zu %s finden. 😢" % name
     else:
         return "Die Suche war erfolgreich! Hier findest du Artikel zu %s:\n%s" % (name, resultlist[0])
-    
+
 def display_artikelzahl(resultlist, name):
     return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
 
+def display_generalinformation(resultlist, name):
+    displaylist = []
+    result = resultlist[0]
+    if "birthdate" in result.keys():
+        displaylist.append("Geboren: %s" % result["birthdate"])
+    if "birthplaceLabel" in result.keys():
+        displaylist.append("Geburtsort: %s" % result["birthplaceLabel"])
+    if "motherLabel" in result.keys():
+        displaylist.append("Mutter: %s" % result["motherLabel"])
+    if "fatherLabel" in result.keys():
+        displaylist.append("Vater: %s" % result["fatherLabel"])
+    if "spouseLabel" in result.keys():
+        displaylist.append("Gatte/Gattin: %s" % result["spouseLabel"])
+    if "deathdate" in result.keys():
+        displaylist.append("Gestorben: %s" % result["deathdate"])
+    if "deathplaceLabel" in result.keys():
+        displaylist.append("Sterbeort: %s" % result["deathplaceLabel"])
+    if "deathcauseLabel" in result.keys():
+        displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
+    return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             ?item ?label "%s"@de.
@@ -115,7 +146,49 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                service wikibase:label {{bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
                                }}""",
                                "access": access_artikelzahl,
-                               "layout": display_artikelzahl}
+                               "display": display_artikelzahl},
+           "staatsoberhäupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
+                                     "position": None,
+                                     "find_qid": None,
+                                     "query": None,
+                                     "access": None,
+                                     "display": None},
+           "lenghthpositionheld": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
+                                   "position": 4,
+                                   "find_qid": qid_suchen["person"],
+                                   "query": """
+                                   SELECT ?position ?positionLabel ?starttime ?endtime ?length
+                                   WHERE 
+                                   {{
+                                   wd:{person} p:P39 [
+                                   ps:P39 ?position ;
+                                   pq:P580 ?starttime ;
+                                   pq:P582 ?endtime ] .
+                                   BIND(?endtime - ?starttime AS ?lengthInDays).
+                                   BIND(?lengthInDays/365.2425 AS ?lengthInYears).
+                                   BIND(FLOOR(?lengthInYears) AS ?length).
+                                   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                                   }}""",
+                                   "access": None,
+                                   "display": None},
+           "generalinformation": {"regex": r'(\w+\s\w+\s?\w+?)\s(Informationen|Infos)\s(\w+)\s((\w+)\s?(\w+)\s?(\w+))',
+                                  "position": 4,
+                                  "find_qid": qid_suchen["person"],
+                                  "query": """SELECT ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel
+                                  WHERE
+                                  {{
+                                  OPTIONAL {{ wd:{person} wdt:P569 ?birthdate . }}
+                                  OPTIONAL {{ wd:{person} wdt:P19 ?birthplace . }}
+                                  OPTIONAL {{ wd:{person} wdt:P570 ?deathdate . }}
+                                  OPTIONAL {{ wd:{person} wdt:P20 ?deathplace . }}
+                                  OPTIONAL {{ wd:{person} wdt:P509 ?deathcause . }}
+                                  OPTIONAL {{ wd:{person} wdt:P22 ?father . }}
+                                  OPTIONAL {{ wd:{person} wdt:P25 ?mother . }}
+                                  OPTIONAL {{ wd:{person} wdt:P26 ?spouse . }}
+                                  SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
+                                  }}""",
+                                  "access": access_generalinformation,
+                                  "display": display_generalinformation}
            }
 
 
