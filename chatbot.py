@@ -3,7 +3,8 @@ fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen
 
 Aktuelle Funktionen: kinder_namen, artikel_zu"""
 
-
+from telegram import (InlineKeyboardButton,
+                      InlineKeyboardMarkup)
 from telegram.ext import (Updater,
                           CommandHandler,
                           MessageHandler,
