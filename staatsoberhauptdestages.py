@@ -3,11 +3,13 @@
 
 import random
 import time
+from datetime import datetime
 import schedule
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 endpoint_url = "https://query.wikidata.org/sparql"
+
 
 def get_results(endpoint_url, query):
     user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
@@ -15,10 +17,11 @@ def get_results(endpoint_url, query):
     sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    #print(sparql.query().convert())
+    # print(sparql.query().convert())
     return sparql.query().convert()
 
-def get_random_staatsoberhaupt (endpoint_url):
+
+def get_random_staatsoberhaupt(endpoint_url):
     query = """
        PREFIX schema: <http://schema.org/>
        PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
@@ -39,7 +42,7 @@ def get_random_staatsoberhaupt (endpoint_url):
          OPTIONAL { ?item wdt:P26 ?spouse . }
          OPTIONAL { ?item wdt:P18 ?pic . }
          SERVICE wikibase:label {bd:serviceParam wikibase:language "en" }
-         
+
         ?item p:P4293/pq:P5592 ?workCount .
       filter(?workCount > 0)
       bind(substr(?pm20Id, 4, 4) as ?numStub)
@@ -51,49 +54,43 @@ def get_random_staatsoberhaupt (endpoint_url):
     return (get_results(endpoint_url, query))
 
 
-#ergebnisse in variable speichern
+# ergebnisse in variable speichern
 resultjson = get_random_staatsoberhaupt(endpoint_url)
 
+
 def daily_special():
-    #funktion returned namen des staatsoberhaupts und nichts anderes.............
     staatsoberhaupt_counter = len(resultjson['results']['bindings'])
     random_index = random.randint(0, staatsoberhaupt_counter - 1)
+
     def daily_staatsoberhaupt():
         name = resultjson['results']['bindings'][random_index]['itemLabel']['value']
         return name
-    daily_staatsoberhaupt()
 
     def daily_description():
         description = resultjson['results']['bindings'][random_index]['itemDescription']['value']
         return description
-    daily_description()
 
     def daily_birthdate():
-        birthdate = resultjson['results']['bindings'][random_index]['birthdate']['value']
-        return birthdate
-    daily_birthdate()
+        birthdate = datetime.strptime(resultjson['results']['bindings'][random_index]['birthdate']['value'], '%Y-%m-%dT%H:%M:%SZ')
+        return birthdate.strftime('%d.%m.%Y')
 
-    #returned namen des orts und nichts anderes......
     def daily_birthplace():
-       birthplace = resultjson['results']['bindings'][random_index]['birthplaceLabel']['value']
-       if birthplace.startswith('Q') == True:
-           return None
-       else:
-           return birthplace
-    daily_birthdate()
+        birthplace = resultjson['results']['bindings'][random_index]['birthplaceLabel']['value']
+        if birthplace.startswith('Q') == True:
+            return None
+        else:
+            return birthplace
 
     def daily_deathdate():
-        deathdate = resultjson['results']['bindings'][random_index]['deathdate']['value']
-        return deathdate
-    daily_deathdate()
+        deathdate = datetime.strptime(resultjson['results']['bindings'][random_index]['deathdate']['value'], '%Y-%m-%dT%H:%M:%SZ')
+        return deathdate.strftime('%d.%m.%Y')
 
     def daily_deathplace():
         deathplace = resultjson['results']['bindings'][random_index]['deathplaceLabel']['value']
         if deathplace.startswith('Q') == True:
-           return None
+            return None
         else:
-           return deathplace
-    daily_deathplace()
+            return deathplace
 
     def daily_mother():
         mother = resultjson['results']['bindings'][random_index]['motherLabel']['value']
@@ -101,7 +98,6 @@ def daily_special():
             return None
         else:
             return mother
-    daily_mother()
 
     def daily_father():
         father = resultjson['results']['bindings'][random_index]['fatherLabel']['value']
@@ -109,7 +105,6 @@ def daily_special():
             return None
         else:
             return father
-    daily_father()
 
     def daily_spouse():
         spouse = resultjson['results']['bindings'][random_index]['spouseLabel']['value']
@@ -117,29 +112,26 @@ def daily_special():
             return None
         else:
             return spouse
-    daily_spouse()
 
     def daily_pic():
         pic = resultjson['results']['bindings'][random_index]['pic']['value']
         return pic
-    daily_pic()
 
     print("Staatsoberhaupt des Tages:", daily_staatsoberhaupt())
     print("Beschreibung:", daily_description())
     print("Geburtsdatum: ", daily_birthdate())
     print("Geburtsort:", daily_birthplace())
     print("Sterbedatum:", daily_deathdate())
-    print("Sterbeort: ",daily_deathplace())
+    print("Sterbeort: ", daily_deathplace())
     print("Mutter: ", daily_mother())
     print("Vater: ", daily_mother())
     print("Ehepartner: ", daily_spouse())
     print("Bild: ", daily_pic())
     print("--------------------------------------")
 
-#daily_special()
 
 schedule.every(1).minutes.do(daily_special)
 
 while True:
-   schedule.run_pending()
-   time.sleep(1)
+    schedule.run_pending()
+    time.sleep(1)
