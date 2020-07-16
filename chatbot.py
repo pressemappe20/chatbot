@@ -82,7 +82,16 @@ qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHE
             ?article schema:inLanguage "en" .
             ?article schema:isPartOf <https://en.wikipedia.org/>.
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-            }"""}
+            }""",
+             "country": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
+            ?item ?label "%s"@de.  
+            ?item wdt:P31 wd:Q6256 .
+            ?article schema:about ?item .
+            ?article schema:inLanguage "en" .
+            ?article schema:isPartOf <https://en.wikipedia.org/>.	
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }    
+            }"""
+             }
 
 actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?',
                             "position": 6,
