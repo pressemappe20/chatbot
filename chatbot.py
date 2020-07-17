@@ -21,7 +21,7 @@ def access_kinder_namen(dict):
     return dict["childLabel"]["value"]
 
 def access_artikel_zu(dict):
-    return dict["viewer"]["value"].replace("pm20mets/", "pm20mets/pe/")
+    return dict["viewer"]["value"]
 
 def access_artikelzahl(dict):
     return dict["workCount"]["value"]
@@ -124,7 +124,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                            # viewer link
                            bind(substr(?pm20Id, 4, 4) as ?numStub)
                            bind(substr(?pm20Id, 4, 6) as ?num)
-                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
                            # add labels
                            service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
                            }}
