@@ -50,6 +50,11 @@ def access_artikel_zu(dict):
 def access_artikelzahl(dict):
     return dict["workCount"]["value"]
 
+def access_so_land(dict):
+    return {"headofcountry": dict['itemLabel']['value'],
+            "pressemappe": dict['pm20']['value'],
+            "viewer": dict['viewer']['value']}
+
 def access_lengthposition(dict):
     return {"position": dict["positionLabel"]["value"],
             "length": dict["length"]["value"],
@@ -83,6 +88,17 @@ def display_artikel_zu(resultlist, name):
 
 def display_artikelzahl(resultlist, name):
     return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
+
+def display_so_land(resultlist, country):
+    if len(resultlist) == 0:
+        return "Ich konnte keine Staatsoberhäupter von %s finden. 😢" % country
+    elif len(resultlist) == 1:
+        return "Die Suche war erfolgreich! %s ist ein Staatsoberhaupt von %s!" % (resultlist[0], country)
+    else:
+        displaylist = []
+        for r in resultlist:
+            displaylist.append("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (r["headofcountry"], r["pressemappe"], r["viewer"]))
+        return ("Die Suche war erfolgreich! Hier ist eine Liste von Staatsoberhäuptern von %s:\n\n" % country) + "\n\n".join(displaylist)
 
 def display_lengthposition(resultlist, name):
     result = resultlist[0]
@@ -139,7 +155,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                             "query": """SELECT ?child ?childLabel
                                  WHERE
                                  {{
-                                 wd:{person} wdt:P40 ?child .
+                                 wd:{qid} wdt:P40 ?child .
                                  SERVICE wikibase:label {{bd:serviceParam wikibase:language "en" }}
                                  }}""",
                             "access": access_kinder_namen,
@@ -157,9 +173,9 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                            ?pm20 zbwext:activity/schema:about "Head of state"@en .
                            bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
                            }}
-                           wd:{person} wdt:P4293 ?pm20Id .
+                           wd:{qid} wdt:P4293 ?pm20Id .
                            # restrict to items with online accessible articles
-                           wd:{person} p:P4293/pq:P5592 ?workCount .
+                           wd:{qid} p:P4293/pq:P5592 ?workCount .
                            filter(?workCount > 0)
                            # viewer link
                            bind(substr(?pm20Id, 4, 4) as ?numStub)
@@ -184,8 +200,8 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                ?pm20 zbwext:activity/schema:about "Head of state"@en .
                                bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
                                }}
-                               wd:{person} wdt:P4293 ?pm20Id .
-                               wd:{person} p:P4293/pq:P5592 ?workCount .
+                               wd:{qid} wdt:P4293 ?pm20Id .
+                               wd:{qid} p:P4293/pq:P5592 ?workCount .
                                filter(?workCount > 0)
                                # viewer link
                                bind(substr(?pm20Id, 4, 4) as ?numStub)
@@ -197,11 +213,28 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                "access": access_artikelzahl,
                                "display": display_artikelzahl},
            "staatsoberhäupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
-                                     "position": None,
-                                     "find_qid": None,
-                                     "query": None,
-                                     "access": None,
-                                     "display": None},
+                                     "position": 6,
+                                     "find_qid": qid_suchen["country"],
+                                     "query": """PREFIX schema: <http://schema.org/>
+                                                 PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                                 select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                                                 where {{
+                                                 service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                                 ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                                 bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                                 }}
+                                                 ?item wdt:P4293 ?pm20Id .
+                                                 ?item wdt:P27 wd:{qid}.
+                                                 ?item p:P4293/pq:P5592 ?workCount .
+                                                 filter(?workCount > 0)
+                                                 bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                                 bind(substr(?pm20Id, 4, 6) as ?num)
+                                                 bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                                 service wikibase:label {{ bd:serviceParam wikibase:language "de" . }}
+                                                 }}
+                                                 order by ?itemLabel""",
+                                     "access": access_so_land,
+                                     "display": display_so_land},
            "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
                                    "position": 4,
                                    "find_qid": qid_suchen["person"],
@@ -209,7 +242,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                    SELECT ?position ?positionLabel ?starttime ?endtime ?length
                                    WHERE 
                                    {{
-                                   wd:{person} p:P39 [
+                                   wd:{qid} p:P39 [
                                    ps:P39 ?position ;
                                    pq:P580 ?starttime ;
                                    pq:P582 ?endtime ] .
@@ -226,14 +259,14 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                   "query": """SELECT ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel
                                   WHERE
                                   {{
-                                  OPTIONAL {{ wd:{person} wdt:P569 ?birthdate . }}
-                                  OPTIONAL {{ wd:{person} wdt:P19 ?birthplace . }}
-                                  OPTIONAL {{ wd:{person} wdt:P570 ?deathdate . }}
-                                  OPTIONAL {{ wd:{person} wdt:P20 ?deathplace . }}
-                                  OPTIONAL {{ wd:{person} wdt:P509 ?deathcause . }}
-                                  OPTIONAL {{ wd:{person} wdt:P22 ?father . }}
-                                  OPTIONAL {{ wd:{person} wdt:P25 ?mother . }}
-                                  OPTIONAL {{ wd:{person} wdt:P26 ?spouse . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P569 ?birthdate . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P19 ?birthplace . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P570 ?deathdate . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P20 ?deathplace . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P509 ?deathcause . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P22 ?father . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P25 ?mother . }}
+                                  OPTIONAL {{ wd:{qid} wdt:P26 ?spouse . }}
                                   SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
                                   }}""",
                                   "access": access_generalinformation,
@@ -247,7 +280,6 @@ def reply(message):
     replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     resultlist = []
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
-        print(r)
         resultlist.append(replydict["access"](r))
     return replydict["display"](resultlist, replydict["result"])
 
@@ -295,11 +327,11 @@ def get_person(name):
 def get_results(qid, query):
     user_agent = "WDQS-example Python/3.7"
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
-    sparql.setQuery(query.format(person=qid))
+    sparql.setQuery(query.format(qid=qid))
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-
+  
 # Telegram
 updater = Updater(token="1311256473:AAGF0N6tjRCO5zIdDwMPOMaE1LfPK3aWies", use_context=True)
 dispatcher = updater.dispatcher
