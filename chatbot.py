@@ -38,7 +38,6 @@ winking = u"\U0001F609"
 lupe = u"\U0001F50D"
 crown = u"\U0001F451"
 waving = u"\U0001F44B"
-bust = u"\U0001F464"
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -79,8 +78,15 @@ def access_generalinformation(dict):
 def access_picture(dict):
     return dict["pic"]["value"]
 
+def access_articles_ab(dict):
+    return {"name": dict["itemLabel"]["value"],
+            "pressemappe": dict["pm20"]["value"],
+            "viewer": dict["viewer"]["value"],
+            "works": dict["workCount"]["value"]}
+
 def access_found_cat(dict):
     return "In honor of Mrs. Chippy."
+
 
 # Darstellung der Ergebnisse
 def display_kinder_namen(resultlist, name):
@@ -162,7 +168,20 @@ def display_picture(resultlist, name):
     if len(resultlist) == 0:
         return "Ich habe heute leider kein Foto (von %s) für dich. 😢" % name
     else:
-        return """<a href="{link}">{bust}</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], bust=bust, name=name)
+        return """<a href="{link}">u"\U0001F464"</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], name=name)
+
+def display_articles_ab(resultlist, number):
+    displaylist = []
+    counter = 0
+    resultlist.reverse()
+    for r in resultlist:
+        counter += 1
+        displaylist.append("""{rank}. {person} ({number} Artikel)\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{dlink}">DFG-Viewer</a>""".format(rank=counter,
+                                                                                                                                                      person=r["name"],
+                                                                                                                                                      number=r["works"],
+                                                                                                                                                      plink=r["pressemappe"],
+                                                                                                                                                      dlink=r["viewer"]))
+    return ("Die Suche war erfolgreich! Folgende Einträge besitzen über %s Artikel:" % number) + "\n\n".join(displaylist)
 
 def display_fehler(resultlist, name):
     return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
@@ -348,6 +367,34 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                        """,
                        "access": access_picture,
                        "display": display_picture},
+           "articles_above": {"regex": r'(\w+\s?\w+?)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(\w+\s\w+\s\w+\s?\w+?)\s(\d)\s(Artikel|Artikeln)\s(\w+\s\w+)\s(Pressemappe|PM20)',
+                              "position": 4,
+                              "find_qid": None,
+                              "query": """PREFIX schema: <http://schema.org/>
+                              PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                              select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                              where {{
+                              # get the basic set of persons with "field of activity"
+                              # "Staatsoberhaupt" from PM20 endpoint
+                              service <http://zbw.eu/beta/sparql/pm20/query> {{
+                              ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                              bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                              }}
+                              ?item wdt:P4293 ?pm20Id .
+                              #
+                              # restrict to items with online accessible articles
+                              ?item p:P4293/pq:P5592 ?workCount .
+                              filter(?workCount > 100)
+                              # viewer link
+                              bind(substr(?pm20Id, 4, 4) as ?numStub)
+                              bind(substr(?pm20Id, 4, 6) as ?num)
+                              bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                              # add labels
+                              service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                              }}
+                              order by ?workCount""",
+                              "access": access_articles_ab,
+                              "display": display_articles_ab},
            "found_cat": {"regex": None,
                          "position": None,
                          "find_qid": qid_suchen["cat"],
@@ -365,7 +412,10 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
 # general operators
 def reply(message):
     replydict = match_pattern(message)
-    replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
+    if replydict["find_qid"] is not None:
+        replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
+    else:
+        replydict["qid"] = replydict["result"]
     resultlist = []
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
         resultlist.append(replydict["access"](r))
