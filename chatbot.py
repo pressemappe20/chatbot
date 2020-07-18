@@ -161,8 +161,7 @@ def display_picture(resultlist, name):
     if len(resultlist) == 0:
         return "Ich habe heute leider kein Foto (von %s) für dich. 😢" % name
     else:
-        return ("<a href=\"%s\">" % resultlist[0]) +\
-               u"\U0001F464" + "</a> Hier ist ein Bild von %s:" % name
+        return """<a href="{link}">u"\U0001F464"</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], name=name)
 
 def display_fehler(resultlist, name):
     return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
