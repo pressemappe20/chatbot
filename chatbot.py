@@ -23,6 +23,12 @@ def prettydate(date):
     dateobject = datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
     return dateobject.strftime('%d.%m.%Y')
 
+def is_qid(text):
+    if re.compile(r'(Q\d+)').match(text) is not None:
+        return ""
+    else:
+        return text
+
 # emojis
 book = u"\U0001F4D6" #Description
 cake = u"\U0001F382" # Geburtstag
@@ -67,14 +73,14 @@ def access_lengthposition(dict):
             "end": prettydate(dict["endtime"]["value"])}
 
 def access_generalinformation(dict):
-    return {"birthplaceLabel": dict["birthplaceLabel"]["value"],
-            "deathplaceLabel": dict["deathplaceLabel"]["value"],
+    return {"birthplaceLabel": is_qid(dict["birthplaceLabel"]["value"]),
+            "deathplaceLabel": is_qid(dict["deathplaceLabel"]["value"]),
             "birthdate": dict["birthdate"]["value"],
             "deathdate": dict["deathdate"]["value"],
-            "deathcauseLabel": dict["deathcauseLabel"]["value"],
-            "motherLabel": dict["motherLabel"]["value"],
-            "fatherLabel": dict["fatherLabel"]["value"],
-            "spouseLabel": dict["spouseLabel"]["value"]}
+            "deathcauseLabel": is_qid(dict["deathcauseLabel"]["value"]),
+            "motherLabel": is_qid(dict["motherLabel"]["value"]),
+            "fatherLabel": is_qid(dict["fatherLabel"]["value"]),
+            "spouseLabel": is_qid(dict["spouseLabel"]["value"])}
 
 # Darstellung der Ergebnisse
 def display_kinder_namen(resultlist, name):
@@ -133,19 +139,25 @@ def display_generalinformation(resultlist, name):
     if "birthdate" in result.keys():
         displaylist.append("Geboren: %s" % prettydate(result["birthdate"]))
     if "birthplaceLabel" in result.keys():
-        displaylist.append("Geburtsort: %s" % result["birthplaceLabel"])
+        if len(result["birthplaceLabel"]) > 0:
+            displaylist.append("Geburtsort: %s" % result["birthplaceLabel"])
     if "motherLabel" in result.keys():
-        displaylist.append("Mutter: %s" % result["motherLabel"])
+        if len(result["motherLabel"]) > 0:
+            displaylist.append("Mutter: %s" % result["motherLabel"])
     if "fatherLabel" in result.keys():
-        displaylist.append("Vater: %s" % result["fatherLabel"])
+        if len(result["fatherLabel"]) > 0:
+            displaylist.append("Vater: %s" % result["fatherLabel"])
     if "spouseLabel" in result.keys():
-        displaylist.append("Gatte/Gattin: %s" % result["spouseLabel"])
+        if len(result["spouseLabel"]) > 0:
+            displaylist.append("Gatte/Gattin: %s" % result["spouseLabel"])
     if "deathdate" in result.keys():
         displaylist.append("Gestorben: %s" % prettydate(result["deathdate"]))
     if "deathplaceLabel" in result.keys():
-        displaylist.append("Sterbeort: %s" % result["deathplaceLabel"])
+        if len(result["deathplaceLabel"]) > 0:
+            displaylist.append("Sterbeort: %s" % result["deathplaceLabel"])
     if "deathcauseLabel" in result.keys():
-        displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
+        if len(result["deathcauseLabel"]) > 0:
+            displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
     return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
