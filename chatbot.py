@@ -15,11 +15,30 @@ import re
 from SPARQLWrapper import (SPARQLWrapper,
                            JSON)
 from datetime import datetime
+import random
+import sys
 
 # Sonstiges
 def prettydate(date):
     dateobject = datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
     return dateobject.strftime('%d.%m.%Y')
+
+# emojis
+book = u"\U0001F4D6" #Description
+cake = u"\U0001F382" # Geburtstag
+pin = u"\U0001F4CD" # für Geburtsort und Sterbeort nutzen
+skull = u"\U0001F480" # Sterbedatum
+knife = u"\U0001F52A"	 # Todesursache
+father = u"\U0001F468"  #Vater
+mother = u"\U0001F469"  #Mutter
+spouse = u"\U0001F46B"  #Ehepartner
+camera = u"\U0001F4F8" # Bild/Foto
+smiling = u"\U0001F60A"
+winking = u"\U0001F609"
+lupe = u"\U0001F50D"
+crown = u"\U0001F451"
+waving = u"\U0001F44B"
+
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -294,10 +313,6 @@ button = [[InlineKeyboardButton(text="Pressemappe 20. Jahrhundert",
                                 url="https://de.wikipedia.org/wiki/Pressearchiv_20._Jahrhundert")]]
 show_button = InlineKeyboardMarkup(inline_keyboard=button)
 
-# emojis
-lupe = u"\U0001F50D"
-crown = u"\U0001F451"
-waving = u"\U0001F44B"
 
 # /start Command
 def start(update, context):
@@ -357,7 +372,171 @@ def dailyspecial(update, context):
                                   "So bekommst du jeden Tag deine Dosis an Informationen zu verschiedenen Königen, Königinnen "
                                   "und anderen Staatsoberhäuptern! " + crown,
                              parse_mode="HTML")
+
     
+# Daily Special Funktion
+endpoint_url = "https://query.wikidata.org/sparql"
+
+def get_results_ds(endpoint_url, query):
+    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+    # TODO adjust user agent; see https://w.wiki/CX6
+    sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
+    sparql.setQuery(query)
+    sparql.setReturnFormat(JSON)
+    # print(sparql.query().convert())
+    return sparql.query().convert()
+
+
+def get_random_staatsoberhaupt(endpoint_url):
+    query = """
+       PREFIX schema: <http://schema.org/>
+       PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+       SELECT DISTINCT ?item ?itemLabel ?itemDescription ?pm20 ?viewer ?workCount ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel ?pic
+       where {
+       service <http://zbw.eu/beta/sparql/pm20/query> {
+        ?pm20 zbwext:activity/schema:about "Head of state"@en .
+        bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+      }
+       ?item wdt:P4293 ?pm20Id .
+         OPTIONAL { ?item wdt:P569 ?birthdate . }
+         OPTIONAL { ?item wdt:P19 ?birthplace . }
+         OPTIONAL { ?item wdt:P570 ?deathdate . }
+         OPTIONAL { ?item wdt:P20 ?deathplace . }
+         OPTIONAL { ?item wdt:P509 ?deathcause . }
+         OPTIONAL { ?item wdt:P22 ?father . }
+         OPTIONAL { ?item wdt:P25 ?mother . }
+         OPTIONAL { ?item wdt:P26 ?spouse . }
+         OPTIONAL { ?item wdt:P18 ?pic . }
+         SERVICE wikibase:label {bd:serviceParam wikibase:language "en" }
+        ?item p:P4293/pq:P5592 ?workCount .
+      filter(?workCount > 0)
+      bind(substr(?pm20Id, 4, 4) as ?numStub)
+      bind(substr(?pm20Id, 4, 6) as ?num)
+      bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+      service wikibase:label { bd:serviceParam wikibase:language "de" . }
+         }
+        """
+    return (get_results_ds(endpoint_url, query))
+
+# ergebnisse in variable speichern
+resultjson = get_random_staatsoberhaupt(endpoint_url)
+
+def daily_special():
+    staatsoberhaupt_counter = len(resultjson['results']['bindings'])
+    random_index = random.randint(0, staatsoberhaupt_counter - 1)
+
+    def daily_staatsoberhaupt():
+        name = resultjson['results']['bindings'][random_index]['itemLabel']['value']
+        return name
+
+    def daily_description():
+        description = resultjson['results']['bindings'][random_index]['itemDescription']['value']
+        return description
+
+    def daily_birthdate():
+        birthdate = datetime.strptime(resultjson['results']['bindings'][random_index]['birthdate']['value'], '%Y-%m-%dT%H:%M:%SZ')
+        return birthdate.strftime('%d.%m.%Y')
+
+    def daily_birthplace():
+        birthplace = resultjson['results']['bindings'][random_index]['birthplaceLabel']['value']
+        if birthplace.startswith('Q') == True:
+            return None
+        else:
+            return birthplace
+
+    def daily_deathdate():
+        deathdate = datetime.strptime(resultjson['results']['bindings'][random_index]['deathdate']['value'], '%Y-%m-%dT%H:%M:%SZ')
+        return deathdate.strftime('%d.%m.%Y')
+
+    def daily_deathplace():
+        deathplace = resultjson['results']['bindings'][random_index]['deathplaceLabel']['value']
+        if deathplace.startswith('Q') == True:
+            return None
+        else:
+            return deathplace
+
+    def daily_mother():
+        mother = resultjson['results']['bindings'][random_index]['motherLabel']['value']
+        if mother.startswith('Q') == True:
+            return None
+        else:
+            return mother
+
+    def daily_father():
+        father = resultjson['results']['bindings'][random_index]['fatherLabel']['value']
+        if father.startswith('Q') == True:
+            return None
+        else:
+            return father
+
+    def daily_spouse():
+        spouse = resultjson['results']['bindings'][random_index]['spouseLabel']['value']
+        if spouse.startswith('Q') == True:
+            return None
+        else:
+            return spouse
+
+    def daily_pic():
+        pic = resultjson['results']['bindings'][random_index]['pic']['value']
+        return pic
+
+    # Durch den Multiline String muss das leider so komisch eingerückt werden, ansonsten sieht die Ausgabe in Telegram...nicht gut aus.
+    message = """
+Das Staatsoberhaupt des Tages ist: <b>{name}</b>\n\n
+{e0} <b>Beschreibung:</b> {description}
+{e1} <b>Geburtsdatum:</b> {bdate}
+{e2} <b>Geburtsort:</b> {bplace}
+{e3} <b>Sterbedatum:</b> {ddate}
+{e4} <b>Sterbeort:</b> {dplace}
+{e5} <b>Mutter:</b> {mother}
+{e6} <b>Vater:</b> {father}
+{e7} <b>Ehepartner:</b> {spouse}\n
+Falls das Bild der Person nicht angezeigt wird, <a href="{pic}">{e8} klicke hier!</a>\n\n
+Das war das Staatsoberhaupt des Tages! Jetzt hast du wieder etwas neues erfahren!\n
+    """.format(e0=book, e1=cake, e2=pin, e3=skull, e4=pin, e5=mother, e6=father, e7=spouse, e8=camera,
+        name=daily_staatsoberhaupt(),
+        description=daily_description(),
+        bdate=daily_birthdate(),
+        bplace=daily_birthplace(),
+        ddate=daily_deathdate(),
+        dplace=daily_deathplace(),
+        mother=daily_mother(),
+        father=daily_father(),
+        spouse=daily_spouse(),
+        pic=daily_pic())
+    return message
+
+
+# speichert chat_id aller Nutzer, die den Command /abo aufrufen
+abolist = []
+
+def abo(update, context):
+    id = update.message.chat_id
+    if id in abolist:
+        answer = "Du hast das Daily Special schon abonniert! " + winking
+    else:
+        answer = "Super! Jetzt hast du das Daily Special abonniert und bekommst jeden Tag eine Nachricht zu einem " \
+                 "beliebigen Staatsoberhaupt aus der Pressemappe! " + smiling
+        abolist.append(id)
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text=answer,
+                             parse_mode="HTML")
+    return abolist
+
+
+# Job Queue erstellen (ist an Updater gebunden!)
+j = updater.job_queue
+
+def send_ds(context):
+    for i in abolist:
+        context.bot.send_message(chat_id=i, text=daily_special(), parse_mode="HTML")
+
+
+# run job queue, muss noch verändert werden, für Testzwecke alle 30 sek
+job_minute = j.run_repeating(send_ds, interval=30, first=0)
+
+#job_ds = j.run_daily(send_ds)
+
 
 # add all Commands with dispatcher
 starthandler = CommandHandler("start", start)
@@ -372,10 +551,12 @@ dispatcher.add_handler(infohandler)
 dailyspecialhandler = CommandHandler("dailyspecial", dailyspecial)
 dispatcher.add_handler(dailyspecialhandler)
 
+abohandler = CommandHandler("abo", abo)
+dispatcher.add_handler(abohandler)
+
 
 def echo(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply(update.message.text))
-
 
 echohandler = MessageHandler(Filters.text & (~Filters.command), echo)
 dispatcher.add_handler(echohandler)
