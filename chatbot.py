@@ -162,7 +162,7 @@ def display_generalinformation(resultlist, name):
     return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
 
 def display_fehler(resultlist, name):
-    return ("Das habe ich leider nicht verstanden. Unter /hilfe findest du meine Funktionen.")
+    return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             ?item ?label "%s"@de.
