@@ -55,6 +55,11 @@ def access_so_land(dict):
             "pressemappe": dict['pm20']['value'],
             "viewer": dict['viewer']['value']}
 
+def access_w_so_land(dict):
+    return {"headofcountry": dict['itemLabel']['value'],
+            "pressemappe": dict['pm20']['value'],
+            "viewer": dict['viewer']['value']}
+
 def access_lengthposition(dict):
     return {"position": dict["positionLabel"]["value"],
             "length": dict["length"]["value"],
@@ -99,6 +104,18 @@ def display_so_land(resultlist, country):
         for r in resultlist:
             displaylist.append("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (r["headofcountry"], r["pressemappe"], r["viewer"]))
         return ("Die Suche war erfolgreich! Hier ist eine Liste von Staatsoberhäuptern von %s:\n\n" % country) + "\n\n".join(displaylist)
+
+def display_w_so_land(resultlist, country):
+    if len(resultlist) == 0:
+        return "Ich konnte keine weiblichen Staatsoberhäupter von %s finden. 😢" % country
+    elif len(resultlist) == 1:
+        return ("Die Suche war erfolgreich! Ich habe ein weibliches Staatsoberhaupt von %s gefunden:\n\n" % country) +\
+               ("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (resultlist[0]["headofcountry"], resultlist[0]["pressemappe"], resultlist[0]["viewer"]))
+    else:
+        displaylist = []
+        for r in resultlist:
+            displaylist.append("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (r["headofcountry"], r["pressemappe"], r["viewer"]))
+        return ("Die Suche war erfolgreich! Hier ist eine Liste von weiblichen Staatsoberhäuptern von %s:\n\n" % country) + "\n\n".join(displaylist)
 
 def display_lengthposition(resultlist, name):
     result = resultlist[0]
@@ -212,7 +229,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                }}""",
                                "access": access_artikelzahl,
                                "display": display_artikelzahl},
-           "staatsoberhäupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
+           "staatsoberhaeupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
                                      "position": 6,
                                      "find_qid": qid_suchen["country"],
                                      "query": """PREFIX schema: <http://schema.org/>
@@ -235,6 +252,29 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                                  order by ?itemLabel""",
                                      "access": access_so_land,
                                      "display": display_so_land},
+           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weibliche)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+)',
+                                    "position": 5,
+                                    "find_qid": qid_suchen["country"],
+                                    "query": """PREFIX schema: <http://schema.org/>
+                                    PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                    select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                                    where {{
+                                    service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                    ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                    bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                    }}
+                                    ?item wdt:P4293 ?pm20Id .
+                                    ?item p:P4293/pq:P5592 ?workCount .
+                                    filter(?workCount > 0)
+                                    bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                    bind(substr(?pm20Id, 4, 6) as ?num)
+                                    bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                    service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
+                                    ?item wdt:P21 wd:Q6581072 .
+                                    ?item wdt:P27 wd:{qid}.
+                                    }}""",
+                                    "access": access_w_so_land,
+                                    "display": display_w_so_land},
            "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
                                    "position": 4,
                                    "find_qid": qid_suchen["person"],
