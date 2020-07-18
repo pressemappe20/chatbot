@@ -351,10 +351,8 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
 # general operators
 def reply(message):
     replydict = match_pattern(message)
-    print(replydict["result"])
     replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     resultlist = []
-    print(get_results(replydict["qid"], replydict["query"]))
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
         resultlist.append(replydict["access"](r))
     return replydict["display"](resultlist, replydict["result"])
