@@ -82,6 +82,9 @@ def access_generalinformation(dict):
             "fatherLabel": is_qid(dict["fatherLabel"]["value"]),
             "spouseLabel": is_qid(dict["spouseLabel"]["value"])}
 
+def access_found_cat(dict):
+    return "In honor of Mrs. Chippy."
+
 # Darstellung der Ergebnisse
 def display_kinder_namen(resultlist, name):
     if len(resultlist) == 0:
@@ -131,8 +134,6 @@ def display_lengthposition(resultlist, name):
            ("\nEnde der Amtszeit: %s" % result["end"]) +\
            ("\nDauer der Amtszeit: %s Jahre" % int(float(result["length"])))
 
-
-
 def display_generalinformation(resultlist, name):
     displaylist = []
     result = resultlist[0]
@@ -160,6 +161,9 @@ def display_generalinformation(resultlist, name):
             displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
     return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
 
+def display_fehler(resultlist, name):
+    return ("Das habe ich leider nicht verstanden. Unter /hilfe findest du meine Funktionen.")
+
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             ?item ?label "%s"@de.
             ?item wdt:P31 wd:Q5 .
@@ -175,8 +179,15 @@ qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHE
             ?article schema:inLanguage "en" .
             ?article schema:isPartOf <https://en.wikipedia.org/>.	
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }    
-            }"""
-             }
+            }""",
+             "cat": """SELECT DISTINCT ?item ?itemLabel ?itemDescription WHERE {
+            ?item ?label "%s"@de;
+            wdt:P31 wd:Q146.
+            ?article schema:about ?item;
+            schema:inLanguage "en";
+            schema:isPartOf <https://en.wikipedia.org/>.
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+            }"""}
 
 actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?',
                             "position": 6,
@@ -322,15 +333,28 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                   SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
                                   }}""",
                                   "access": access_generalinformation,
-                                  "display": display_generalinformation}
+                                  "display": display_generalinformation},
+           "found_cat": {"regex": None,
+                         "position": None,
+                         "find_qid": qid_suchen["cat"],
+                         "query": """SELECT ?deathLabel
+                         WHERE 
+                         {{
+                         wd:{qid} wdt:P509 ?death.
+                         SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],de". }}
+                         }}""",
+                         "access": access_found_cat,
+                         "display": display_fehler}
            }
 
 
 # general operators
 def reply(message):
     replydict = match_pattern(message)
+    print(replydict["result"])
     replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     resultlist = []
+    print(get_results(replydict["qid"], replydict["query"]))
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
         resultlist.append(replydict["access"](r))
     return replydict["display"](resultlist, replydict["result"])
@@ -350,6 +374,10 @@ def match_pattern(message):
         for match in matches:
             regextract["result"] = match.group(actions[key]["position"])
             return regextract
+    else:
+        regextract = actions["found_cat"].copy()
+        regextract["result"] = "Mrs. Chippy"
+        return regextract
 
 
 # qid
