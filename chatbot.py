@@ -1,9 +1,3 @@
-"""Dieses Programm empfängt und sendet Informationen aus dem Telegram-chat des bots "prmatestbot". Der code kann für den
-fertigen bot genau so verwendet werden, es muss lediglich das token an den neuen bot angepasst werden.
-
-Aktuelle Funktionen: kinder_namen, artikel_zu"""
-
-
 from telegram import (InlineKeyboardButton,
                       InlineKeyboardMarkup)
 from telegram.ext import (Updater,
@@ -45,7 +39,6 @@ lupe = u"\U0001F50D"
 crown = u"\U0001F451"
 waving = u"\U0001F44B"
 
-
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
     return dict["childLabel"]["value"]
@@ -81,6 +74,9 @@ def access_generalinformation(dict):
             "motherLabel": is_qid(dict["motherLabel"]["value"]),
             "fatherLabel": is_qid(dict["fatherLabel"]["value"]),
             "spouseLabel": is_qid(dict["spouseLabel"]["value"])}
+
+def access_picture(dict):
+    return dict["pic"]["value"]
 
 def access_found_cat(dict):
     return "In honor of Mrs. Chippy."
@@ -160,6 +156,13 @@ def display_generalinformation(resultlist, name):
         if len(result["deathcauseLabel"]) > 0:
             displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
     return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
+
+def display_picture(resultlist, name):
+    if len(resultlist) == 0:
+        return "Ich habe heute leider kein Foto (von %s) für dich. 😢" % name
+    else:
+        return ("<a href=\"%s\">" % resultlist[0]) +\
+               u"\U0001F464" + "</a> Hier ist ein Bild von %s:" % name
 
 def display_fehler(resultlist, name):
     return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
@@ -334,6 +337,17 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                   }}""",
                                   "access": access_generalinformation,
                                   "display": display_generalinformation},
+           "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder)\s(\w+)\s((\w+)\s?(\w+))',
+                       "position": 5,
+                       "find_qid": qid_suchen["person"],
+                       "query": """SELECT ?pic
+                       WHERE
+                       {{
+                       wd:{qid}  wdt:P18 ?pic
+                       }}
+                       """,
+                       "access": access_picture,
+                       "display": display_picture},
            "found_cat": {"regex": None,
                          "position": None,
                          "find_qid": qid_suchen["cat"],
