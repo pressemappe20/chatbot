@@ -14,7 +14,12 @@ import logging
 import re
 from SPARQLWrapper import (SPARQLWrapper,
                            JSON)
+from datetime import datetime
 
+# Sonstiges
+def prettydate(date):
+    dateobject = datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
+    return dateobject.strftime('%d.%m.%Y')
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -25,6 +30,12 @@ def access_artikel_zu(dict):
 
 def access_artikelzahl(dict):
     return dict["workCount"]["value"]
+
+def access_lengthposition(dict):
+    return {"position": dict["positionLabel"]["value"],
+            "length": dict["length"]["value"],
+            "start": prettydate(dict["starttime"]["value"]),
+            "end": prettydate(dict["endtime"]["value"])}
 
 def access_generalinformation(dict):
     return {"birthplaceLabel": dict["birthplaceLabel"]["value"],
@@ -54,11 +65,21 @@ def display_artikel_zu(resultlist, name):
 def display_artikelzahl(resultlist, name):
     return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
 
+def display_lengthposition(resultlist, name):
+    result = resultlist[0]
+    return ("Die Suche war erfolgreich! Das habe ich zur Regierungszeit von %s gefunden:\n" % name) +\
+           ("\nAmt: %s" % result["position"]) +\
+           ("\nBeginn der Amtszeit: %s" % result["start"]) +\
+           ("\nEnde der Amtszeit: %s" % result["end"]) +\
+           ("\nDauer der Amtszeit: %s Jahre" % int(float(result["length"])))
+
+
+
 def display_generalinformation(resultlist, name):
     displaylist = []
     result = resultlist[0]
     if "birthdate" in result.keys():
-        displaylist.append("Geboren: %s" % result["birthdate"])
+        displaylist.append("Geboren: %s" % prettydate(result["birthdate"]))
     if "birthplaceLabel" in result.keys():
         displaylist.append("Geburtsort: %s" % result["birthplaceLabel"])
     if "motherLabel" in result.keys():
@@ -68,7 +89,7 @@ def display_generalinformation(resultlist, name):
     if "spouseLabel" in result.keys():
         displaylist.append("Gatte/Gattin: %s" % result["spouseLabel"])
     if "deathdate" in result.keys():
-        displaylist.append("Gestorben: %s" % result["deathdate"])
+        displaylist.append("Gestorben: %s" % prettydate(result["deathdate"]))
     if "deathplaceLabel" in result.keys():
         displaylist.append("Sterbeort: %s" % result["deathplaceLabel"])
     if "deathcauseLabel" in result.keys():
@@ -162,7 +183,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                      "query": None,
                                      "access": None,
                                      "display": None},
-           "lenghthpositionheld": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
+           "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
                                    "position": 4,
                                    "find_qid": qid_suchen["person"],
                                    "query": """
@@ -176,10 +197,10 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                    BIND(?endtime - ?starttime AS ?lengthInDays).
                                    BIND(?lengthInDays/365.2425 AS ?lengthInYears).
                                    BIND(FLOOR(?lengthInYears) AS ?length).
-                                   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                                   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
                                    }}""",
-                                   "access": None,
-                                   "display": None},
+                                   "access": access_lengthposition,
+                                   "display": display_lengthposition},
            "generalinformation": {"regex": r'(\w+\s\w+\s?\w+?)\s(Informationen|Infos)\s(\w+)\s((\w+)\s?(\w+)\s?(\w+))',
                                   "position": 4,
                                   "find_qid": qid_suchen["person"],
@@ -207,6 +228,7 @@ def reply(message):
     replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     resultlist = []
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
+        print(r)
         resultlist.append(replydict["access"](r))
     return replydict["display"](resultlist, replydict["result"])
 
@@ -258,7 +280,7 @@ def get_results(qid, query):
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-  
+
 # Telegram
 updater = Updater(token="1311256473:AAGF0N6tjRCO5zIdDwMPOMaE1LfPK3aWies", use_context=True)
 dispatcher = updater.dispatcher
