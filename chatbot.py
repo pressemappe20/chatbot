@@ -38,6 +38,7 @@ winking = u"\U0001F609"
 lupe = u"\U0001F50D"
 crown = u"\U0001F451"
 waving = u"\U0001F44B"
+bust = u"\U0001F464"
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -161,7 +162,7 @@ def display_picture(resultlist, name):
     if len(resultlist) == 0:
         return "Ich habe heute leider kein Foto (von %s) für dich. 😢" % name
     else:
-        return """<a href="{link}">u"\U0001F464"</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], name=name)
+        return """<a href="{link}">{bust}</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], bust=bust, name=name)
 
 def display_fehler(resultlist, name):
     return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
