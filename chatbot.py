@@ -513,7 +513,9 @@ def start(update, context):
                                  "Das sind die Commands des Bots:\n\n"
                                  "<b>/info</b>: Wenn du mehr zur Pressemappe erfahren willst, schau hier nach.\n"
                                  "<b>/help</b>: Wenn du Hilfe brauchst, schau bei diesem Command nach. Dort werden die Funktionen des Bots etwas genauer erklärt.\n"
-                                 "<b>/dailyspecial</b>: Hier findest du Infos zur Funktion <i>Staatsoberhaupt des Tages</i>\n\n"
+                                 "<b>/dailyspecial</b>: Hier findest du Infos zur <em>Daily Special</em> Funktion.\n"
+                                 "<b>/abo</b>: Abonnieren der <em>Daily Special</em> Funktion.\n"
+                                 "<b>/abo_stop</b>: De-Abonnieren der <em>Daily Special</em> Funktion.\n\n"
                                  "Ansonsten wünschen wir viel Spaß beim Erforschen! " + lupe,
                             parse_mode="HTML")
 
@@ -555,10 +557,11 @@ def info(update, context):
 # /dailyspecial Command
 def dailyspecial(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text="Wir haben die Funktion “Staatsoberhaupt des Tages” für dich erstellt!\n\n"
+                             text="Wir haben die Funktion <em>Daily Special</em> für dich erstellt!\n\n"
                                   "Damit bekommst du jeden Tag grundlegende Informationen zu einem beliebig gewählten Staatsoberhaupt aus der Pressemappe. "
                                   "So bekommst du jeden Tag deine Dosis an Informationen zu verschiedenen Königen, Königinnen "
-                                  "und anderen Staatsoberhäuptern! " + crown,
+                                  "und anderen Staatsoberhäuptern! " + crown + "\n\nDu kannst die Funktion mit dem Command <b>/abo</b> abonnieren, "
+                                  "mit dem Command <b>/abo_stop</b> kannst du dich wieder abmelden.",
                              parse_mode="HTML")
 
 # filtert alle Commands, die nicht gespeichert wurden
@@ -680,31 +683,28 @@ def daily_special():
         return pic
 
     # Durch den Multiline String muss das leider so komisch eingerückt werden, ansonsten sieht die Ausgabe in Telegram...nicht gut aus.
-    message = """
-Das Staatsoberhaupt des Tages ist: <b>{name}</b>\n\n
-{e0} <b>Beschreibung:</b> {description}
-{e1} <b>Geburtsdatum:</b> {bdate}
-{e2} <b>Geburtsort:</b> {bplace}
-{e3} <b>Sterbedatum:</b> {ddate}
-{e4} <b>Sterbeort:</b> {dplace}
-{e5} <b>Mutter:</b> {mother}
-{e6} <b>Vater:</b> {father}
-{e7} <b>Ehepartner:</b> {spouse}\n
-Falls das Bild der Person nicht angezeigt wird, <a href="{pic}">{e8} klicke hier!</a>\n\n
-Das war das Staatsoberhaupt des Tages! Jetzt hast du wieder etwas neues erfahren!\n
-    """.format(e0=book, e1=cake, e2=pin, e3=skull, e4=pin, e5=mother, e6=father, e7=spouse, e8=camera,
-        name=daily_staatsoberhaupt(),
-        description=daily_description(),
-        bdate=daily_birthdate(),
-        bplace=daily_birthplace(),
-        ddate=daily_deathdate(),
-        dplace=daily_deathplace(),
-        mother=daily_mother(),
-        father=daily_father(),
-        spouse=daily_spouse(),
-        pic=daily_pic())
-    return message
+    messagelist = []
+    messagelist.append("Das Staatsoberhaupt des Tages ist: <b>{name}</b>\n".format(name=daily_staatsoberhaupt()))
+    if daily_description() is not None:
+        messagelist.append("{e0} <b>Beschreibung:</b> {description}".format(e0=book, description=daily_description()))
+    if daily_birthdate() is not None:
+        messagelist.append("{e1} <b>Geburtsdatum:</b> {bdate}".format(e1=cake, bdate=daily_birthdate()))
+    if daily_birthplace() is not None:
+        messagelist.append("{e2} <b>Geburtsort:</b> {bplace}".format(e2=pin, bplace=daily_birthplace()))
+    if daily_deathdate() is not None:
+        messagelist.append("{e3} <b>Sterbedatum:</b> {ddate}".format(e3=skull, ddate=daily_deathdate()))
+    if daily_deathplace() is not None:
+        messagelist.append("{e4} <b>Sterbeort:</b> {dplace}".format(e4=pin, dplace=daily_deathplace()))
+    if daily_mother() is not None:
+        messagelist.append("{e5} <b>Mutter:</b> {mother}".format(e5=mother, mother=daily_mother()))
+    if daily_father() is not None:
+        messagelist.append("{e6} <b>Vater:</b> {father}".format(e6=father, father=daily_father()))
+    if daily_spouse() is not None:
+        messagelist.append("{e7} <b>Ehepartner*in:</b> {spouse}\n".format(e7=spouse, spouse=daily_spouse()))
 
+    messagelist.append("""Falls das Bild der Person nicht angezeigt wird, <a href="{pic}">{e8} klicke hier!</a>\n\n
+Das war das Staatsoberhaupt des Tages! Jetzt hast du wieder etwas neues erfahren!\n""".format(e8=camera, pic=daily_pic()))
+    return "\n".join(messagelist)
 
 # speichert chat_id aller Nutzer, die den Command /abo aufrufen
 abolist = []
@@ -748,7 +748,7 @@ def send_ds(context):
 
 
 # run job queue, muss noch verändert werden, für Testzwecke alle 3600 sek, 1h
-job_minute = j.run_repeating(send_ds, interval=3600, first=0)
+job_minute = j.run_repeating(send_ds, interval=36000, first=0)
 
 #job_ds = j.run_daily(send_ds)
 
