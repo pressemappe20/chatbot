@@ -184,7 +184,7 @@ def display_articles_ab(resultlist, number):
     return ("Die Suche war erfolgreich! Folgende Einträge besitzen über %s Artikel:" % number) + "\n\n".join(displaylist)
 
 def display_fehler(resultlist, name):
-    return ("Das habe ich leider nicht verstanden. Unter /help findest du meine Funktionen.")
+    return "Das habe ich leider nicht verstanden. 😢\nUnter /help findest du meine Funktionen."
 
 qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             ?item ?label "%s"@de.
@@ -367,7 +367,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                        """,
                        "access": access_picture,
                        "display": display_picture},
-           "articles_above": {"regex": r'(\w+\s?\w+?)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(\w+\s\w+\s\w+\s?\w+?)\s(\d)\s(Artikel|Artikeln)\s(\w+\s\w+)\s(Pressemappe|PM20)',
+           "articles_above": {"regex": r'(\w+\s?\w+?)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(\w+\s\w+\s\w+\s?\w+?)\s(\d+)\s(Artikel|Artikeln)\s(\w+\s\w+)\s(Pressemappe|PM20)',
                               "position": 4,
                               "find_qid": None,
                               "query": """PREFIX schema: <http://schema.org/>
@@ -384,7 +384,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                               #
                               # restrict to items with online accessible articles
                               ?item p:P4293/pq:P5592 ?workCount .
-                              filter(?workCount > 100)
+                              filter(?workCount > {qid})
                               # viewer link
                               bind(substr(?pm20Id, 4, 4) as ?numStub)
                               bind(substr(?pm20Id, 4, 6) as ?num)
