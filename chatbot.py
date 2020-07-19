@@ -740,6 +740,8 @@ job_minute = j.run_repeating(send_ds, interval=30, first=0)
 
 #job_ds = j.run_daily(send_ds)
 
+def echo(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=reply(update.message.text), parse_mode="HTML")
 
 # add all Commands with dispatcher
 starthandler = CommandHandler("start", start)
@@ -760,13 +762,11 @@ dispatcher.add_handler(abohandler)
 abo_stophandler = CommandHandler("abo_stop", abo_stop)
 dispatcher.add_handler(abo_stophandler)
 
-unknown_handler = MessageHandler(Filters.command, unknown)
-dispatcher.add_handler(unknown_handler)
-
-def echo(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=reply(update.message.text), parse_mode="HTML")
-
 echohandler = MessageHandler(Filters.text & (~Filters.command), echo)
 dispatcher.add_handler(echohandler)
+
+# muss als letztes zum dispatcher hinzugefügt werden
+unknown_handler = MessageHandler(Filters.command, unknown)
+dispatcher.add_handler(unknown_handler)
 
 updater.start_polling()
