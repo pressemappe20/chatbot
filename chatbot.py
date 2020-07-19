@@ -106,13 +106,17 @@ def display_artikel_zu(resultlist, name):
         return "Die Suche war erfolgreich! Hier findest du Artikel zu %s:\n%s" % (name, resultlist[0])
 
 def display_artikelzahl(resultlist, name):
-    return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
+    if len(resultlist) == 0:
+        return "Ich konnte keine Artikel zu %s finden. 😢" % name
+    else:
+        return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
 
 def display_so_land(resultlist, country):
     if len(resultlist) == 0:
         return "Ich konnte keine Staatsoberhäupter von %s finden. 😢" % country
     elif len(resultlist) == 1:
-        return "Die Suche war erfolgreich! %s ist ein Staatsoberhaupt von %s!" % (resultlist[0], country)
+        return ("Die Suche war erfolgreich! Ich habe ein Staatsoberhaupt von %s gefunden:\n\n" % country) +\
+               ("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (resultlist[0]["headofcountry"], resultlist[0]["pressemappe"], resultlist[0]["viewer"]))
     else:
         displaylist = []
         for r in resultlist:
@@ -188,9 +192,16 @@ def display_articles_ab(resultlist, number):
 def display_fehler(resultlist, name):
     return "Das habe ich leider nicht verstanden. 😢\nUnter /help findest du meine Funktionen."
 
-qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
+qid_suchen = {"person": """PREFIX schema: <http://schema.org/>
+PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             ?item ?label "%s"@de.
             ?item wdt:P31 wd:Q5 .
+            service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                                 ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                                 bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                                 }}
+                                                 ?item wdt:P4293 ?pm20Id .
             ?article schema:about ?item .
             ?article schema:inLanguage "en" .
             ?article schema:isPartOf <https://en.wikipedia.org/>.
@@ -213,7 +224,7 @@ qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHE
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
             }"""}
 
-actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?',
+actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+\s?\w+)?',
                             "position": 6,
                             "find_qid": qid_suchen["person"],
                             "query": """SELECT ?child ?childLabel
@@ -299,7 +310,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                                  order by ?itemLabel""",
                                      "access": access_so_land,
                                      "display": display_so_land},
-           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weibliche)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+)',
+           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weiblichen)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+)',
                                     "position": 5,
                                     "find_qid": qid_suchen["country"],
                                     "query": """PREFIX schema: <http://schema.org/>
@@ -358,7 +369,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                   }}""",
                                   "access": access_generalinformation,
                                   "display": display_generalinformation},
-           "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder)\s(\w+)\s((\w+)\s?(\w+))',
+           "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder|ein Bild|Fotos|ein Foto)\s(\w+)\s((\w+)\s?(\w+))',
                        "position": 5,
                        "find_qid": qid_suchen["person"],
                        "query": """SELECT ?pic
@@ -516,16 +527,15 @@ def help(update, context):
                             text="Dieser Chatbot gibt dir Informationen zur <b>Pressemappe des 20. Jahrhunderts</b> (PM20) aus.\n\n"
                                  "Du kannst einfach anfangen, dem Bot Fragen zu stellen, zum Beispiel: <i>Wieviele Kinder hat Joseph Stalin?</i>\n\n"
                                  "Der Chatbot kann momentan etwa 10 verschiedene Fragen und Aufforderungen beantworten:\n\n"
-                                 "- Wie heißen die Kinder von <i>{Person}</i>?\n"
-                                 "- Wieviele Kinder hat <i>{Person}</i>?\n"
-                                 "- Gib mir Artikel über <i>{Person}</i> in PM20\n"
-                                 "- Wieviele Artikel gibt es in der PM20 über <i>{Person}</i>?\n"
-                                 "- Gib mir ein Bild von <i>{Person}</i>\n"
-                                 "- Gib mir Allgemeine Informationen zu <i>{Person}</i>\n"
-                                 "- Gib mir weibliche Staatsoberhäupter eines <i>{Landes}</i>\n"
-                                 "- Nenn mir Artikel zu Staatsoberhäuptern von <i>{Land}</i>.\n"
-                                 "- Mehr als <i>{Anzahl}</i> Artikel in der Pressemappe\n"
-                                 "- Wie lange hat <i>{Person}</i> regiert?\n\n"
+                                 "- Gib mir Infos zu <i>{Staatsoberhaupt}</i>.\n"
+                                 "- Gib mir Artikel zu <i>{Staatsoberhaupt}</i>.\n"
+                                 "- Wie viele Artikel gibt es in der Pressemappe zu <i>{Staatsoberhaupt}</i>?\n"
+                                 "- Wie heißen die Kinder von <i>{Staatsoberhaupt}</i>?\n"
+                                 "- Wie lange hat <i>{Staatsoberhaupt}</i> regiert?\n"
+                                 "- Gib mir ein Bild von <i>{Staatsoberhaupt}</i>.\n"
+                                 "- Gib mir Artikel zu Staatsoberhäupter von <i>{Land}</i>.\n"
+                                 "- Gib mir Artikel zu weiblichen Staatsoberhäuptern von <i>{Land}</i>.\n"
+                                 "- Welche Staatsoberhäupter besitzen mehr als <i>{Zahl}</i> Artikel in der Pressemappe?\n"
                                  "Der Bot beschränkt sich bisher auf das Thema <b>Staatsoberhäupter</b>.\n\n"
                                  "Leg los und probiere einfach einige der Fragen aus!",
                             parse_mode="HTML")
@@ -544,7 +554,7 @@ def info(update, context):
                             parse_mode="HTML",
                             reply_markup=show_button)
 
-   
+
 # /dailyspecial Command
 def dailyspecial(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
@@ -564,8 +574,8 @@ def unknown(update, context):
                              "<b>/dailyspecial</b>: Hier findest du Infos zur Funktion <i>Staatsoberhaupt des Tages</i>\n\n"
                              "Wahrscheinlich hast du einen hiervon gemeint!",
                              parse_mode="HTML")
-    
-    
+
+
 # Daily Special Funktion
 endpoint_url = "https://query.wikidata.org/sparql"
 
@@ -631,7 +641,7 @@ def daily_special():
 
     def daily_birthplace():
         birthplace = resultjson['results']['bindings'][random_index]['birthplaceLabel']['value']
-        if birthplace.startswith('Q') == True:
+        if is_qid(birthplace) == "":
             return None
         else:
             return birthplace
@@ -642,28 +652,28 @@ def daily_special():
 
     def daily_deathplace():
         deathplace = resultjson['results']['bindings'][random_index]['deathplaceLabel']['value']
-        if deathplace.startswith('Q') == True:
+        if is_qid(deathplace) == "":
             return None
         else:
             return deathplace
 
     def daily_mother():
         mother = resultjson['results']['bindings'][random_index]['motherLabel']['value']
-        if mother.startswith('Q') == True:
+        if is_qid(mother) == "":
             return None
         else:
             return mother
 
     def daily_father():
         father = resultjson['results']['bindings'][random_index]['fatherLabel']['value']
-        if father.startswith('Q') == True:
+        if is_qid(father) == "":
             return None
         else:
             return father
 
     def daily_spouse():
         spouse = resultjson['results']['bindings'][random_index]['spouseLabel']['value']
-        if spouse.startswith('Q') == True:
+        if is_qid(spouse) == "":
             return None
         else:
             return spouse
