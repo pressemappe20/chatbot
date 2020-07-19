@@ -23,6 +23,7 @@ def is_qid(text):
     else:
         return text
 
+      
 # emojis
 book = u"\U0001F4D6" #Description
 cake = u"\U0001F382" # Geburtstag
@@ -39,7 +40,7 @@ lupe = u"\U0001F50D"
 crown = u"\U0001F451"
 waving = u"\U0001F44B"
 thinking = u"\U0001F914"
-
+person = u"\U0001F464"
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -95,86 +96,82 @@ def display_kinder_namen(resultlist, name):
     if len(resultlist) == 0:
         return "Ich konnte keine Kinder von %s finden. 😢" % name
     elif len(resultlist) == 1:
-        return "Die Suche war erfolgreich! %s ist ein Kind von %s!" % (resultlist[0], name)
+        return "Die Suche war erfolgreich! <b>%s</b> ist ein Kind von <b>%s</b>!" % (resultlist[0], name)
     else:
-        return ("Die Suche war erfolgreich! Hier ist eine Liste der Kinder von %s:\n" % name) + "\n".join(resultlist)
+        return ("Die Suche war erfolgreich! Hier ist eine Liste der <b>Kinder von %s:</b>\n\n" % name) + "\n".join(resultlist)
 
 def display_artikel_zu(resultlist, name):
     if len(resultlist) == 0:
-        return "Ich konnte keine Artikel zu %s finden. 😢" % name
+        return "Ich konnte keine Artikel zu <b>%s</b> finden. 😢" % name
     else:
-        return "Die Suche war erfolgreich! Hier findest du Artikel zu %s:\n%s" % (name, resultlist[0])
+        return """Die Suche war erfolgreich! <a href="{link}">Hier</a> findest du Artikel zu <b>{name}</b>.""".format(name=name, link=resultlist[0])
 
 def display_artikelzahl(resultlist, name):
-    if len(resultlist) == 0:
-        return "Ich konnte keine Artikel zu %s finden. 😢" % name
-    else:
-        return "Die Suche war erfolgreich! Zu %s gibt es in der Pressemappe %s Artikel." % (name, resultlist[0])
+    return "Die Suche war erfolgreich! Zu <b>%s</b> gibt es in der Pressemappe <b>%s</b> Artikel." % (name, resultlist[0])
 
 def display_so_land(resultlist, country):
     if len(resultlist) == 0:
         return "Ich konnte keine Staatsoberhäupter von %s finden. 😢" % country
     elif len(resultlist) == 1:
-        return ("Die Suche war erfolgreich! Ich habe ein Staatsoberhaupt von %s gefunden:\n\n" % country) +\
-               ("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (resultlist[0]["headofcountry"], resultlist[0]["pressemappe"], resultlist[0]["viewer"]))
+        return "Die Suche war erfolgreich! <b>%s</b> ist ein Staatsoberhaupt von <b>%s</b>!" % (resultlist[0], country)
     else:
         displaylist = []
         for r in resultlist:
-            displaylist.append("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (r["headofcountry"], r["pressemappe"], r["viewer"]))
-        return ("Die Suche war erfolgreich! Hier ist eine Liste von Staatsoberhäuptern von %s:\n\n" % country) + "\n\n".join(displaylist)
+            displaylist.append("""<b>{name}</b>\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{vlink}">Viewer-Link</a>""".format(name=r["headofcountry"], plink=r["pressemappe"], vlink=r["viewer"]))
+        return ("Die Suche war erfolgreich! Hier ist eine Liste von Staatsoberhäuptern von <b>%s</b>:\n\n" % country) + "\n\n".join(displaylist)
 
 def display_w_so_land(resultlist, country):
     if len(resultlist) == 0:
-        return "Ich konnte keine weiblichen Staatsoberhäupter von %s finden. 😢" % country
+        return "Ich konnte keine weiblichen Staatsoberhäupter von <b>%s</b> finden. 😢" % country
     elif len(resultlist) == 1:
-        return ("Die Suche war erfolgreich! Ich habe ein weibliches Staatsoberhaupt von %s gefunden:\n\n" % country) +\
-               ("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (resultlist[0]["headofcountry"], resultlist[0]["pressemappe"], resultlist[0]["viewer"]))
+        return ("Die Suche war erfolgreich! Ich habe ein weibliches Staatsoberhaupt von <b>%s</b> gefunden:\n\n" % country) +\
+               ("""<b>{name}</b>\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{vlink}">Viewer-Link</a>""".format(name=resultlist[0]["headofcountry"], plink=resultlist[0]["pressemappe"], vlink=resultlist[0]["viewer"]))
     else:
         displaylist = []
         for r in resultlist:
-            displaylist.append("%s\nPressemappe-Link: %s\nViewer-Link: %s" % (r["headofcountry"], r["pressemappe"], r["viewer"]))
-        return ("Die Suche war erfolgreich! Hier ist eine Liste von weiblichen Staatsoberhäuptern von %s:\n\n" % country) + "\n\n".join(displaylist)
+            displaylist.append("""<b>{name}</b>\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{vlink}">Viewer-Link</a>""".format(name=r["headofcountry"], plink=r["pressemappe"], vlink=r["viewer"]))
+        return ("Die Suche war erfolgreich! Hier ist eine Liste von weiblichen Staatsoberhäuptern von <b>%s</b>:\n\n" % country) + "\n\n".join(displaylist)
 
 def display_lengthposition(resultlist, name):
     result = resultlist[0]
-    return ("Die Suche war erfolgreich! Das habe ich zur Regierungszeit von %s gefunden:\n" % name) +\
-           ("\nAmt: %s" % result["position"]) +\
-           ("\nBeginn der Amtszeit: %s" % result["start"]) +\
-           ("\nEnde der Amtszeit: %s" % result["end"]) +\
-           ("\nDauer der Amtszeit: %s Jahre" % int(float(result["length"])))
+    return ("Die Suche war erfolgreich! Das habe ich zur Regierungszeit von <b>%s</b> gefunden:\n" % name) +\
+           ("\n<b>Amt:</b> %s" % result["position"]) +\
+           ("\n<b>Beginn der Amtszeit</b>: %s" % result["start"]) +\
+           ("\n<b>Ende der Amtszeit</b>: %s" % result["end"]) +\
+           ("\n<b>Dauer der Amtszeit</b>: %s Jahre" % int(float(result["length"])))
 
 def display_generalinformation(resultlist, name):
     displaylist = []
     result = resultlist[0]
     if "birthdate" in result.keys():
-        displaylist.append("Geboren: %s" % prettydate(result["birthdate"]))
+        displaylist.append("\n" + cake + " <b>Geboren</b>: %s" % prettydate(result["birthdate"]))
     if "birthplaceLabel" in result.keys():
         if len(result["birthplaceLabel"]) > 0:
-            displaylist.append("Geburtsort: %s" % result["birthplaceLabel"])
+            displaylist.append(pin + " <b>Geburtsort</b>: %s" % result["birthplaceLabel"])
     if "motherLabel" in result.keys():
         if len(result["motherLabel"]) > 0:
-            displaylist.append("Mutter: %s" % result["motherLabel"])
+            displaylist.append(mother + " <b>Mutter</b>: %s" % result["motherLabel"])
     if "fatherLabel" in result.keys():
         if len(result["fatherLabel"]) > 0:
-            displaylist.append("Vater: %s" % result["fatherLabel"])
+            displaylist.append(father + " <b>Vater</b>: %s" % result["fatherLabel"])
     if "spouseLabel" in result.keys():
         if len(result["spouseLabel"]) > 0:
-            displaylist.append("Gatte/Gattin: %s" % result["spouseLabel"])
+            displaylist.append(spouse + " <b>Gatte/Gattin</b>: %s" % result["spouseLabel"])
     if "deathdate" in result.keys():
-        displaylist.append("Gestorben: %s" % prettydate(result["deathdate"]))
+        displaylist.append(skull + " <b>Gestorben</b>: %s" % prettydate(result["deathdate"]))
     if "deathplaceLabel" in result.keys():
         if len(result["deathplaceLabel"]) > 0:
-            displaylist.append("Sterbeort: %s" % result["deathplaceLabel"])
+            displaylist.append(pin + " <b>Sterbeort</b>: %s" % result["deathplaceLabel"])
     if "deathcauseLabel" in result.keys():
         if len(result["deathcauseLabel"]) > 0:
-            displaylist.append("Todesursache: %s" % result["deathcauseLabel"])
-    return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu %s:\n" % name) + "\n".join(displaylist)
+            displaylist.append(knife + " <b>Todesursache</b>: %s" % result["deathcauseLabel"])
+    return ("Die Suche war erfolgreich! Hier findest du allgemeine Informationen zu <b>%s</b>:\n" % name) + "\n".join(displaylist)
 
 def display_picture(resultlist, name):
     if len(resultlist) == 0:
         return "Ich habe heute leider kein Foto (von %s) für dich. 😢" % name
     else:
-        return """<a href="{link}">u"\U0001F464"</a> Hier ist ein Bild von {name}:""".format(link=resultlist[0], name=name)
+        return """<a href="{link}">{person}</a> Hier ist ein Bild von <b>{name}</b>:""".format(person=person, link=resultlist[0], name=name)
 
 def display_articles_ab(resultlist, number):
     displaylist = []
@@ -182,15 +179,15 @@ def display_articles_ab(resultlist, number):
     resultlist.reverse()
     for r in resultlist:
         counter += 1
-        displaylist.append("""{rank}. {person} ({number} Artikel)\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{dlink}">DFG-Viewer</a>""".format(rank=counter,
+        displaylist.append("""{rank}. <b>{person}</b> ({number} Artikel)\n<a href="{plink}">Pressemappe-Link</a>\n<a href="{dlink}">DFG-Viewer</a>""".format(rank=counter,
                                                                                                                                                       person=r["name"],
                                                                                                                                                       number=r["works"],
                                                                                                                                                       plink=r["pressemappe"],
                                                                                                                                                       dlink=r["viewer"]))
-    return ("Die Suche war erfolgreich! Folgende Einträge besitzen über %s Artikel:" % number) + "\n\n".join(displaylist)
+    return ("Die Suche war erfolgreich! Folgende Einträge besitzen über %s Artikel:\n\n" % number) + "\n\n".join(displaylist)
 
 def display_fehler(resultlist, name):
-    return "Das habe ich leider nicht verstanden. 😢\nUnter /help findest du meine Funktionen."
+    return "Das habe ich leider nicht verstanden. 😢\nUnter <b>/help</b> findest du meine Funktionen."
 
 qid_suchen = {"person": """PREFIX schema: <http://schema.org/>
 PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
@@ -750,8 +747,8 @@ def send_ds(context):
         context.bot.send_message(chat_id=i, text=daily_special(), parse_mode="HTML")
 
 
-# run job queue, muss noch verändert werden, für Testzwecke alle 30 sek
-job_minute = j.run_repeating(send_ds, interval=30, first=0)
+# run job queue, muss noch verändert werden, für Testzwecke alle 3600 sek, 1h
+job_minute = j.run_repeating(send_ds, interval=3600, first=0)
 
 #job_ds = j.run_daily(send_ds)
 
