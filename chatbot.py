@@ -38,6 +38,8 @@ winking = u"\U0001F609"
 lupe = u"\U0001F50D"
 crown = u"\U0001F451"
 waving = u"\U0001F44B"
+thinking = u"\U0001F914"
+
 
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
@@ -537,7 +539,7 @@ def info(update, context):
                             parse_mode="HTML",
                             reply_markup=show_button)
 
-
+   
 # /dailyspecial Command
 def dailyspecial(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
@@ -547,6 +549,17 @@ def dailyspecial(update, context):
                                   "und anderen Staatsoberhäuptern! " + crown,
                              parse_mode="HTML")
 
+# filtert alle Commands, die nicht gespeichert wurden
+def unknown(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Diesen Command gibt es leider nicht. " + thinking +
+                             "\nMomentan gibt es folgende Befehle:\n\n"
+                             "<b>/info</b>: Wenn du mehr zur Pressemappe erfahren willst, schau hier nach.\n"
+                             "<b>/help</b>: Wenn du Hilfe brauchst, schau bei diesem Command nach. Dort werden die Funktionen des Bots etwas genauer erklärt.\n"
+                             "<b>/dailyspecial</b>: Hier findest du Infos zur Funktion <i>Staatsoberhaupt des Tages</i>\n\n"
+                             "Wahrscheinlich hast du einen hiervon gemeint!",
+                             parse_mode="HTML")
+    
     
 # Daily Special Funktion
 endpoint_url = "https://query.wikidata.org/sparql"
@@ -687,16 +700,32 @@ abolist = []
 def abo(update, context):
     id = update.message.chat_id
     if id in abolist:
-        answer = "Du hast das Daily Special schon abonniert! " + winking
+        answer = "Du hast das <b>Daily Special</b> schon abonniert! Wenn du dich abmelden willst, dann benutze den Command <b>/abo_stop.</b> " + winking
     else:
-        answer = "Super! Jetzt hast du das Daily Special abonniert und bekommst jeden Tag eine Nachricht zu einem " \
-                 "beliebigen Staatsoberhaupt aus der Pressemappe! " + smiling
+        answer = "Super! Jetzt hast du das <b>Daily Special</b> abonniert und bekommst jeden Tag eine Nachricht zu einem " \
+                 "beliebigen Staatsoberhaupt aus der Pressemappe! " + smiling + "\n\nWenn du keine Nachrichten mehr bekommen möchtest, " \
+                 "melde dich einfach mit dem Command <b>/abo_stop</b> vom <b>Daily Special</b> ab."
         abolist.append(id)
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=answer,
                              parse_mode="HTML")
     return abolist
 
+
+# entfernt chat_id wieder
+def abo_stop(update, context):
+    id = update.message.chat_id
+    if id in abolist:
+        abolist.remove(id)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Du hast dich jetzt vom <b>Daily Special</b> abgemeldet. Wenn du die Funktion wieder abonnieren möchtest, "
+                                      "benutze den Command /abo. " + smiling,
+                                 parse_mode="HTML")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Du hast das <b>Daily Special</b> nicht abonniert, deswegen kannst du dich auch nicht abmelden. "
+                                      "Wenn du das <b>Daily Special</b> abonnieren möchtest, benutze den Command <b>/abo.</b> " + winking,
+                                 parse_mode="HTML")
 
 # Job Queue erstellen (ist an Updater gebunden!)
 j = updater.job_queue
@@ -728,6 +757,11 @@ dispatcher.add_handler(dailyspecialhandler)
 abohandler = CommandHandler("abo", abo)
 dispatcher.add_handler(abohandler)
 
+abo_stophandler = CommandHandler("abo_stop", abo_stop)
+dispatcher.add_handler(abo_stophandler)
+
+unknown_handler = MessageHandler(Filters.command, unknown)
+dispatcher.add_handler(unknown_handler)
 
 def echo(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply(update.message.text), parse_mode="HTML")
