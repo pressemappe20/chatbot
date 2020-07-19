@@ -418,6 +418,8 @@ def reply(message):
         replydict["qid"] = get_qid(replydict["result"], replydict["find_qid"])
     else:
         replydict["qid"] = replydict["result"]
+    if replydict["qid"] is False:
+        return "Leider habe ich zu deiner Anfrage keinen passenden Datensatz finden können. 😢"
     resultlist = []
     for r in get_results(replydict["qid"], replydict["query"])["results"]["bindings"]:
         resultlist.append(replydict["access"](r))
@@ -452,7 +454,10 @@ def get_qid(name, query):
     sparql.setQuery(fullquery)
     sparql.setReturnFormat(JSON)
     searchresults = sparql.query().convert()
-    return searchresults["results"]["bindings"][0]["item"]["value"].replace("http://www.wikidata.org/entity/", "")
+    try:
+        return searchresults["results"]["bindings"][0]["item"]["value"].replace("http://www.wikidata.org/entity/", "")
+    except IndexError:
+        return False
 
 
 def get_person(name):
@@ -475,7 +480,7 @@ def get_results(qid, query):
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-  
+
 # Telegram
 updater = Updater(token="1311256473:AAGF0N6tjRCO5zIdDwMPOMaE1LfPK3aWies", use_context=True)
 dispatcher = updater.dispatcher
