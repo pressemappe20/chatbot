@@ -216,11 +216,18 @@ qid_suchen = {"person": """SELECT distinct ?item ?itemLabel ?itemDescription WHE
 actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+)\s?(\w+)?',
                             "position": 6,
                             "find_qid": qid_suchen["person"],
-                            "query": """SELECT ?child ?childLabel
-                                 WHERE
-                                 {{
-                                 wd:{qid} wdt:P40 ?child .
-                                 SERVICE wikibase:label {{bd:serviceParam wikibase:language "en" }}
+                            "query": """
+                                 PREFIX schema: <http://schema.org/>
+                                 PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                 SELECT DISTINCT ?child ?childLabel
+                                 WHERE {{
+                                 service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                 ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                 bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                 }}
+                                 wd:{qid} wdt:P4293 ?pm20Id ,
+                                          wdt:P40 ?child .
+                                 SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
                                  }}""",
                             "access": access_kinder_namen,
                             "display":display_kinder_namen},
@@ -228,52 +235,42 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                           "position": 4,
                           "find_qid": qid_suchen["person"],
                           "query": """PREFIX schema: <http://schema.org/>
-                           PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
-                           select distinct ?pm20 ?viewer ?workCount
-                           where {{
-                           # get the basic set of persons with "field of activity"
-                           # "Staatsoberhaupt" from PM20 endpoint
-                           service <http://zbw.eu/beta/sparql/pm20/query> {{
-                           ?pm20 zbwext:activity/schema:about "Head of state"@en .
-                           bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
-                           }}
-                           wd:{qid} wdt:P4293 ?pm20Id .
-                           # restrict to items with online accessible articles
-                           wd:{qid} p:P4293/pq:P5592 ?workCount .
-                           filter(?workCount > 0)
-                           # viewer link
-                           bind(substr(?pm20Id, 4, 4) as ?numStub)
-                           bind(substr(?pm20Id, 4, 6) as ?num)
-                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
-                           # add labels
-                           service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
-                           }}
-                           """,
+                                      PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                      select distinct ?pm20 ?viewer ?workCount
+                                      where {{
+                                      service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                      ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                      bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                      }}
+                                      wd:{qid} wdt:P4293 ?pm20Id .
+                                      wd:{qid} p:P4293/pq:P5592 ?workCount .
+                                      filter(?workCount > 0)
+                                      bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                      bind(substr(?pm20Id, 4, 6) as ?num)
+                                      bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                      service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                                      }}""",
                           "access": access_artikel_zu,
                           "display": display_artikel_zu},
            "anzahl_artikel": {"regex": r'(Wie\sviele)\s(Artikel)\s(\w+\s\w+\s?\w+?\s?\w+?)\s(PM20|Pressemappe)\s(\w+)\s(\w+\s?\w+?)',
                                "position": 6,
                                "find_qid": qid_suchen["person"],
                                "query": """PREFIX schema: <http://schema.org/>
-                               PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
-                               select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
-                               where {{
-                               # get the basic set of persons with "field of activity"
-                               # "Staatsoberhaupt" from PM20 endpoint
-                               service <http://zbw.eu/beta/sparql/pm20/query> {{
-                               ?pm20 zbwext:activity/schema:about "Head of state"@en .
-                               bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
-                               }}
-                               wd:{qid} wdt:P4293 ?pm20Id .
-                               wd:{qid} p:P4293/pq:P5592 ?workCount .
-                               filter(?workCount > 0)
-                               # viewer link
-                               bind(substr(?pm20Id, 4, 4) as ?numStub)
-                               bind(substr(?pm20Id, 4, 6) as ?num)
-                               bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
-                               # add labels
-                               service wikibase:label {{bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
-                               }}""",
+                                           PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                           select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                                           where {{
+                                           service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                           ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                           bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                           }}
+                                           wd:{qid} wdt:P4293 ?pm20Id ,
+                                                    p:P4293/pq:P5592 ?workCount .
+                                           filter(?workCount > 0)
+                                           bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                           bind(substr(?pm20Id, 4, 6) as ?num)
+                                           bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                           service wikibase:label {{bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                                           }}""",
                                "access": access_artikelzahl,
                                "display": display_artikelzahl},
            "staatsoberhaeupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
@@ -287,9 +284,9 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                                  ?pm20 zbwext:activity/schema:about "Head of state"@en .
                                                  bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
                                                  }}
-                                                 ?item wdt:P4293 ?pm20Id .
-                                                 ?item wdt:P27 wd:{qid}.
-                                                 ?item p:P4293/pq:P5592 ?workCount .
+                                                 ?item wdt:P4293 ?pm20Id ,
+                                                       wdt:P27 wd:{qid} ,
+                                                       p:P4293/pq:P5592 ?workCount .
                                                  filter(?workCount > 0)
                                                  bind(substr(?pm20Id, 4, 4) as ?numStub)
                                                  bind(substr(?pm20Id, 4, 6) as ?num)
@@ -303,98 +300,109 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                     "position": 5,
                                     "find_qid": qid_suchen["country"],
                                     "query": """PREFIX schema: <http://schema.org/>
-                                    PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
-                                    select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
-                                    where {{
-                                    service <http://zbw.eu/beta/sparql/pm20/query> {{
-                                    ?pm20 zbwext:activity/schema:about "Head of state"@en .
-                                    bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
-                                    }}
-                                    ?item wdt:P4293 ?pm20Id .
-                                    ?item p:P4293/pq:P5592 ?workCount .
-                                    filter(?workCount > 0)
-                                    bind(substr(?pm20Id, 4, 4) as ?numStub)
-                                    bind(substr(?pm20Id, 4, 6) as ?num)
-                                    bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
-                                    service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
-                                    ?item wdt:P21 wd:Q6581072 .
-                                    ?item wdt:P27 wd:{qid}.
-                                    }}""",
+                                                PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                                select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                                                where {{
+                                                service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                                ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                                bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                                }}
+                                                ?item wdt:P4293 ?pm20Id ,
+                                                      p:P4293/pq:P5592 ?workCount .
+                                                filter(?workCount > 0)
+                                                bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                                bind(substr(?pm20Id, 4, 6) as ?num)
+                                                bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                                service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
+                                                ?item wdt:P21 wd:Q6581072 .
+                                                ?item wdt:P27 wd:{qid}.
+                                                }}""",
                                     "access": access_w_so_land,
                                     "display": display_w_so_land},
            "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
                                    "position": 4,
                                    "find_qid": qid_suchen["person"],
-                                   "query": """
-                                   SELECT ?position ?positionLabel ?starttime ?endtime ?length
-                                   WHERE 
-                                   {{
-                                   wd:{qid} p:P39 [
-                                   ps:P39 ?position ;
-                                   pq:P580 ?starttime ;
-                                   pq:P582 ?endtime ] .
-                                   BIND(?endtime - ?starttime AS ?lengthInDays).
-                                   BIND(?lengthInDays/365.2425 AS ?lengthInYears).
-                                   BIND(FLOOR(?lengthInYears) AS ?length).
-                                   service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
-                                   }}""",
+                                   "query": """PREFIX schema: <http://schema.org/>
+                                               PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                               SELECT ?position ?positionLabel ?starttime ?endtime ?length
+                                               WHERE {{
+                                               service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                               ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                               bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                               }}
+                                               wd:{qid} wdt:P4293 ?pm20Id .
+                                               wd:{qid} p:P39 [
+                                               ps:P39 ?position ;
+                                               pq:P580 ?starttime ;
+                                               pq:P582 ?endtime ] .
+                                               BIND(?endtime - ?starttime AS ?lengthInDays).
+                                               BIND(?lengthInDays/365.2425 AS ?lengthInYears).
+                                               BIND(FLOOR(?lengthInYears) AS ?length).
+                                               service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], de" . }}
+                                               }}""",
                                    "access": access_lengthposition,
                                    "display": display_lengthposition},
            "generalinformation": {"regex": r'(\w+\s\w+\s?\w+?)\s(Informationen|Infos)\s(\w+)\s((\w+)\s?(\w+)\s?(\w+))',
                                   "position": 4,
                                   "find_qid": qid_suchen["person"],
-                                  "query": """SELECT ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel
-                                  WHERE
-                                  {{
-                                  OPTIONAL {{ wd:{qid} wdt:P569 ?birthdate . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P19 ?birthplace . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P570 ?deathdate . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P20 ?deathplace . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P509 ?deathcause . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P22 ?father . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P25 ?mother . }}
-                                  OPTIONAL {{ wd:{qid} wdt:P26 ?spouse . }}
-                                  SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
-                                  }}""",
+                                  "query": """PREFIX schema: <http://schema.org/>
+                                              PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                              SELECT ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel
+                                              WHERE {{
+                                              service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                              ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                              bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                              }}
+                                              wd:{qid} wdt:P4293 ?pm20Id .
+                                              OPTIONAL {{ wd:{qid} wdt:P569 ?birthdate . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P19 ?birthplace . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P570 ?deathdate . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P20 ?deathplace . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P509 ?deathcause . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P22 ?father . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P25 ?mother . }}
+                                              OPTIONAL {{ wd:{qid} wdt:P26 ?spouse . }}
+                                              SERVICE wikibase:label {{bd:serviceParam wikibase:language "de" }}
+                                              }}""",
                                   "access": access_generalinformation,
                                   "display": display_generalinformation},
            "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder)\s(\w+)\s((\w+)\s?(\w+))',
                        "position": 5,
                        "find_qid": qid_suchen["person"],
-                       "query": """SELECT ?pic
-                       WHERE
-                       {{
-                       wd:{qid}  wdt:P18 ?pic
-                       }}
-                       """,
+                       "query": """PREFIX schema: <http://schema.org/>
+                                   PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                   SELECT ?pic
+                                   WHERE {{
+                                   service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                   ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                   bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                   }}
+                                   wd:{qid} wdt:P4293 ?pm20Id ,
+                                            wdt:P18 ?pic .
+                                   }}
+                                   """,
                        "access": access_picture,
                        "display": display_picture},
            "articles_above": {"regex": r'(\w+\s?\w+?)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(\w+\s\w+\s\w+\s?\w+?)\s(\d+)\s(Artikel|Artikeln)\s(\w+\s\w+)\s(Pressemappe|PM20)',
                               "position": 4,
                               "find_qid": None,
                               "query": """PREFIX schema: <http://schema.org/>
-                              PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
-                              select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
-                              where {{
-                              # get the basic set of persons with "field of activity"
-                              # "Staatsoberhaupt" from PM20 endpoint
-                              service <http://zbw.eu/beta/sparql/pm20/query> {{
-                              ?pm20 zbwext:activity/schema:about "Head of state"@en .
-                              bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
-                              }}
-                              ?item wdt:P4293 ?pm20Id .
-                              #
-                              # restrict to items with online accessible articles
-                              ?item p:P4293/pq:P5592 ?workCount .
-                              filter(?workCount > {qid})
-                              # viewer link
-                              bind(substr(?pm20Id, 4, 4) as ?numStub)
-                              bind(substr(?pm20Id, 4, 6) as ?num)
-                              bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
-                              # add labels
-                              service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
-                              }}
-                              order by ?workCount""",
+                                          PREFIX zbwext: <http://zbw.eu/namespaces/zbw-extensions/>
+                                          select distinct ?item ?itemLabel ?pm20 ?viewer ?workCount
+                                          where {{
+                                          service <http://zbw.eu/beta/sparql/pm20/query> {{
+                                          ?pm20 zbwext:activity/schema:about "Head of state"@en .
+                                          bind(strafter(str(?pm20), 'http://purl.org/pressemappe20/folder/') as ?pm20Id)
+                                          }}
+                                          ?item wdt:P4293 ?pm20Id .
+                                          ?item p:P4293/pq:P5592 ?workCount .
+                                          filter(?workCount > {qid})
+                                          bind(substr(?pm20Id, 4, 4) as ?numStub)
+                                          bind(substr(?pm20Id, 4, 6) as ?num)
+                                          bind(uri(concat('http://dfg-viewer.de/show/?tx_dlf[id]=http://zbw.eu/beta/pm20mets/pe/', ?numStub, 'xx/', ?num, '.xml')) as ?viewer)
+                                          service wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE], en, de, fr, es, nl, pl, ru" . }}
+                                          }}
+                                          order by ?workCount""",
                               "access": access_articles_ab,
                               "display": display_articles_ab},
            "found_cat": {"regex": None,
