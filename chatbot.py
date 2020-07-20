@@ -12,10 +12,12 @@ from datetime import datetime
 import random
 import sys
 
+
 # Sonstiges
 def prettydate(date):
     dateobject = datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
     return dateobject.strftime('%d.%m.%Y')
+
 
 def is_qid(text):
     if re.compile(r'(Q\d+)').match(text) is not None:
@@ -23,7 +25,7 @@ def is_qid(text):
     else:
         return text
 
-      
+
 # emojis
 book = u"\U0001F4D6" #Description
 cake = u"\U0001F382" # Geburtstag
@@ -42,15 +44,19 @@ waving = u"\U0001F44B"
 thinking = u"\U0001F914"
 person = u"\U0001F464"
 
+
 # Zugriff auf die gesuchten Werte
 def access_kinder_namen(dict):
     return dict["childLabel"]["value"]
 
+
 def access_artikel_zu(dict):
     return dict["viewer"]["value"]
 
+
 def access_artikelzahl(dict):
     return dict["workCount"]["value"]
+
 
 def access_so_land(dict):
     return {"headofcountry": dict['itemLabel']['value'],
@@ -62,11 +68,13 @@ def access_w_so_land(dict):
             "pressemappe": dict['pm20']['value'],
             "viewer": dict['viewer']['value']}
 
+
 def access_lengthposition(dict):
     return {"position": dict["positionLabel"]["value"],
             "length": dict["length"]["value"],
             "start": prettydate(dict["starttime"]["value"]),
             "end": prettydate(dict["endtime"]["value"])}
+
 
 def access_generalinformation(dict):
     return {"birthplaceLabel": is_qid(dict["birthplaceLabel"]["value"]),
@@ -78,14 +86,17 @@ def access_generalinformation(dict):
             "fatherLabel": is_qid(dict["fatherLabel"]["value"]),
             "spouseLabel": is_qid(dict["spouseLabel"]["value"])}
 
+
 def access_picture(dict):
     return dict["pic"]["value"]
+
 
 def access_articles_ab(dict):
     return {"name": dict["itemLabel"]["value"],
             "pressemappe": dict["pm20"]["value"],
             "viewer": dict["viewer"]["value"],
             "works": dict["workCount"]["value"]}
+
 
 def access_found_cat(dict):
     return "In honor of Mrs. Chippy."
@@ -221,7 +232,7 @@ SELECT distinct ?item ?itemLabel ?itemDescription WHERE{
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
             }"""}
 
-actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+\s?\w+)?',
+actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                             "position": 6,
                             "find_qid": qid_suchen["person"],
                             "query": """SELECT ?child ?childLabel
@@ -232,7 +243,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                  }}""",
                             "access": access_kinder_namen,
                             "display":display_kinder_namen},
-           "artikel_zu": {"regex": r'(\w+\s?\w+?)\s(Artikel)\s(\w+)\s((\w+)\s?(\w+))',
+           "artikel_zu": {"regex": r'(\w+\s?\w+?)\s(Artikel)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                           "position": 4,
                           "find_qid": qid_suchen["person"],
                           "query": """PREFIX schema: <http://schema.org/>
@@ -259,7 +270,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                            """,
                           "access": access_artikel_zu,
                           "display": display_artikel_zu},
-           "anzahl_artikel": {"regex": r'(Wie\sviele)\s(Artikel)\s(\w+\s\w+\s?\w+?\s?\w+?)\s(PM20|Pressemappe)\s(\w+)\s(\w+\s?\w+?)',
+           "anzahl_artikel": {"regex": r'(Wie\s?viele)\s(Artikel)\s(\w+\s\w+\s?\w+?\s?\w+?)\s(PM20|Pressemappe)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                                "position": 6,
                                "find_qid": qid_suchen["person"],
                                "query": """PREFIX schema: <http://schema.org/>
@@ -284,7 +295,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                }}""",
                                "access": access_artikelzahl,
                                "display": display_artikelzahl},
-           "staatsoberhaeupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+)',
+           "staatsoberhaeupter_von": {"regex": r'(\w+\s\w+)\s(Artikel)\s(\w+)\s(Staatsoberhäuptern|Staatsoberhäupter)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                                      "position": 6,
                                      "find_qid": qid_suchen["country"],
                                      "query": """PREFIX schema: <http://schema.org/>
@@ -307,7 +318,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                                  order by ?itemLabel""",
                                      "access": access_so_land,
                                      "display": display_so_land},
-           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weiblichen)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+)',
+           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weibliche)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                                     "position": 5,
                                     "find_qid": qid_suchen["country"],
                                     "query": """PREFIX schema: <http://schema.org/>
@@ -330,7 +341,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                     }}""",
                                     "access": access_w_so_land,
                                     "display": display_w_so_land},
-           "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+?)\s(regiert)',
+           "regierungszeit": {"regex": r'(\w+)\s(\w+)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)\s(regiert)',
                                    "position": 4,
                                    "find_qid": qid_suchen["person"],
                                    "query": """
@@ -348,7 +359,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                    }}""",
                                    "access": access_lengthposition,
                                    "display": display_lengthposition},
-           "generalinformation": {"regex": r'(\w+\s\w+\s?\w+?)\s(Informationen|Infos)\s(\w+)\s((\w+)\s?(\w+)\s?(\w+))',
+           "generalinformation": {"regex": r'(\w+\s\w+\s?\w+?)\s(Informationen|Infos)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                                   "position": 4,
                                   "find_qid": qid_suchen["person"],
                                   "query": """SELECT ?birthdate ?birthplaceLabel ?deathdate ?deathplaceLabel ?deathcauseLabel ?fatherLabel ?motherLabel ?spouseLabel
@@ -366,7 +377,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                   }}""",
                                   "access": access_generalinformation,
                                   "display": display_generalinformation},
-           "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder|ein Bild|Fotos|ein Foto)\s(\w+)\s((\w+)\s?(\w+))',
+           "picture": {"regex": r'(\w+)\s(\w+)\s(Bilder|ein Bild|Fotos|ein Foto)\s(\w+)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                        "position": 5,
                        "find_qid": qid_suchen["person"],
                        "query": """SELECT ?pic
