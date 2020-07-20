@@ -318,7 +318,7 @@ actions = {"kinder_namen": {"regex": r'(Wi?e?)\s(heißen)\s(die)\s(Kinder)\s(von
                                                  order by ?itemLabel""",
                                      "access": access_so_land,
                                      "display": display_so_land},
-           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weibliche)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
+           "w_staatsoberhaeupter": {"regex": r'(\w+\s?\w+\s?\w+?\s?\w+?)\s(weibliche|weiblichen)\s(Staatsoberhäupter|Staatsoberhäuptern)\s(von)\s(\w+\s?\w+\s?\w+\s?\w+\s?\w+\s?\w+?)',
                                     "position": 5,
                                     "find_qid": qid_suchen["country"],
                                     "query": """PREFIX schema: <http://schema.org/>
